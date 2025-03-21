@@ -51,3 +51,16 @@ def get_status_color(status):
         'bg': 'bg-gray-100',
         'text': 'text-gray-800'
     })
+
+
+def get_site_config():
+    """
+    Get or create the site configuration.
+    
+    Returns:
+        SiteConfiguration: The site configuration object
+    """
+    from .models import SiteConfiguration
+    
+    config, created = SiteConfiguration.objects.get_or_create(pk=1)
+    return config
