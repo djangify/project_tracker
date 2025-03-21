@@ -1,0 +1,11 @@
+Django
+djangorestframework
+django-cors-headers
+django-environ
+PyMySQL
+python-dotenv
+Pillow
+djangorestframework-simplejwt
+django-filter
+gunicorn
+whitenoise 
