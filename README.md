@@ -1,26 +1,49 @@
-Project Tracker 
-
 # Project Tracker
 
-A Django-based project management system to track and manage multiple projects, tasks, and work sessions.
+A Django-based project management system to track and manage multiple projects, tasks, and work sessions. 
+
+<img src="readme/images/pt-front.png" width="100%"><br><br>
+
+I used Claude.ai to help me build this project. I knew what I wanted but didn't want to spend the next few days coding. 
+
+It look less than 10 hours to complete and it was working and ready to use.
+
+Right now I am only using this in local development. I may deploy it at some stage but that isn't urgent right now.
 
 ## Features
 
-- Track projects with status (active, paused, completed)
+- Track projects with status (active, paused, completed) and priority
 - Manage tasks for each project
-- Log work sessions to monitor progress
+- Log work sessions to monitor time spent on projects
+- Customizable site configuration including branding and social media
 - REST API for integration with other systems
 - Responsive UI using Tailwind CSS
+- Social media sharing with customizable metadata
 
 ## Project Structure
 
 The application follows a clean Django project structure:
 
-- `config/`: Main Django configuration (settings, urls, wsgi)
-- `core/`: Shared functionality and home page
+- `config/`: Main Django configuration (settings, urls, wsgi, asgi)
+- `core/`: Shared functionality, homepage, and site-wide utilities
 - `projects/`: Project management app with models and views
 - `templates/`: Project-wide templates
 - `static/`: Static files (CSS, JS, images)
+- `media/`: User-uploaded content (project images, site branding)
+
+## Components
+
+### Core App
+- Abstract base models like `TimeStampedModel`
+- Site configuration with customizable branding
+- Utility functions and template tags
+- Global context processor for site settings
+
+### Projects App
+- Models for Projects, Tasks, and Work Sessions
+- List and detail views for projects
+- Status filtering and sorting
+- REST API endpoints
 
 ## Setup
 
@@ -74,7 +97,15 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-8. Visit http://localhost:8000 in your browser
+8. Visit http://localhost:8000 in your browser and log in to the admin at http://localhost:8000/admin/
+
+### Image Specifications
+
+For the site configuration, these are the recommended image sizes:
+
+- **Logo**: 120-200px wide by 32-40px tall (SVG format recommended)
+- **Favicon**: 32x32px (PNG format)
+- **Social Media Image**: 1200x630px (JPG or PNG format)
 
 ## Deployment
 
