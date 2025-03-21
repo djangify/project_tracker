@@ -1,13 +1,33 @@
-<!-- projects/templates/projects/index.html -->
+<!-- projects/templates/projects/project_list.html -->
 {% extends 'base.html' %}
+
+{% block title %}Projects - Project Tracker{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-6">
         <h1 class="text-3xl font-bold text-gray-800">My Projects</h1>
-        <a href="{% url 'project_create' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <a href="#" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
             Add Project
         </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white shadow rounded-lg mb-6 p-4">
+        <div class="flex flex-wrap gap-4">
+            <a href="?status=all" class="px-4 py-2 rounded {% if not request.GET.status or request.GET.status == 'all' %}bg-indigo-100 text-indigo-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                All
+            </a>
+            <a href="?status=active" class="px-4 py-2 rounded {% if request.GET.status == 'active' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                Active
+            </a>
+            <a href="?status=paused" class="px-4 py-2 rounded {% if request.GET.status == 'paused' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                Paused
+            </a>
+            <a href="?status=completed" class="px-4 py-2 rounded {% if request.GET.status == 'completed' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                Completed
+            </a>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -52,7 +72,7 @@
                 </div>
             </div>
             <div class="bg-gray-50 px-4 py-3 border-t">
-                <a href="{% url 'project_detail' project.id %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                <a href="{% url 'projects:project_detail' project.id %}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">
                     View Details →
                 </a>
             </div>

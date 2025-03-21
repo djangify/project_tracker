@@ -4,10 +4,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Tracker</title>
+    <title>{% block title %}Project Tracker{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    {% block content %}{% endblock %}
+<body class="bg-gray-100 min-h-screen flex flex-col">
+    <!-- Navigation -->
+    <nav class="bg-indigo-600 text-white shadow">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'core:home' %}" class="text-xl font-bold">Project Tracker</a>
+                    <div class="hidden md:flex space-x-4">
+                        <a href="{% url 'projects:project_list' %}" class="hover:text-indigo-200">Projects</a>
+                        <!-- Add more navigation links as needed -->
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <!-- User dropdown or login/register links would go here -->
+                    <a href="{% url 'admin:index' %}" class="hover:text-indigo-200">Admin</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main content -->
+    <main class="flex-grow">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-4">
+        <div class="container mx-auto px-4">
+            <p class="text-center text-sm">© {% now "Y" %} Project Tracker. <a href="https://www.djangify.com" target="_blank">Djangify.com</a>. All rights reserved.</p>
+        </div>
+    </footer>
 </body>
 </html>

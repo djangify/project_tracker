@@ -1,8 +1,5 @@
 # projects/views.py
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import ListView, DetailView, CreateView, UpdateView
-from django.urls import reverse_lazy
-from django.utils import timezone
+from django.views.generic import ListView, DetailView
 from rest_framework import viewsets
 
 from .models import Project, Task, WorkSession
@@ -11,13 +8,21 @@ from .serializers import ProjectSerializer, TaskSerializer, WorkSessionSerialize
 # Frontend views
 class ProjectListView(ListView):
     model = Project
-    template_name = 'projects/index.html'
+    template_name = 'projects/project_list.html'
     context_object_name = 'projects'
-    ordering = ['priority', '-last_worked_on']
+    
+    def get_queryset(self):
+        queryset = Project.objects.all()
+        status = self.request.GET.get('status')
+        
+        if status and status != 'all':
+            queryset = queryset.filter(status=status)
+            
+        return queryset.order_by('priority', '-last_worked_on')
 
 class ProjectDetailView(DetailView):
     model = Project
-    template_name = 'projects/detail.html'
+    template_name = 'projects/project_detail.html'
     context_object_name = 'project'
 
 # API views
@@ -32,3 +37,4 @@ class TaskViewSet(viewsets.ModelViewSet):
 class WorkSessionViewSet(viewsets.ModelViewSet):
     queryset = WorkSession.objects.all()
     serializer_class = WorkSessionSerializer
+    
