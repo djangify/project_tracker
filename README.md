@@ -128,3 +128,6 @@ The application provides a REST API for projects, tasks, and work sessions:
 ## License
 
 MIT
+
+Developer : Diane Corriette
+https://www.djangify.com 
