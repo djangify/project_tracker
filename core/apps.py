@@ -1,22 +1,14 @@
 # core/apps.py
 from django.apps import AppConfig
+from django.db.models.signals import post_migrate
 
+def create_site_config(sender, **kwargs):
+    from .models import SiteConfiguration
+    SiteConfiguration.objects.get_or_create(pk=1)
 
 class CoreConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'core'
     
     def ready(self):
-        """
-        Create site configuration if it doesn't exist
-        """
-        # Only import and run this code when Django is ready
-        # to avoid AppRegistryNotReady exception
-        try:
-            from .models import SiteConfiguration
-            SiteConfiguration.objects.get_or_create(pk=1)
-        except:
-            # If there's an error (e.g., table doesn't exist yet),
-            # just pass - it will be created after migrations
-            pass
-        
+        post_migrate.connect(create_site_config, sender=self)

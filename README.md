@@ -129,5 +129,15 @@ The application provides a REST API for projects, tasks, and work sessions:
 
 MIT
 
+## Final Thoughts
+
+This project tracker was created with software for one in mind. 
+As a concept, software for one, refers to software designed for a single user, either in terms of:
+
+- **Personal Software**: Apps or tools meant for individual use (e.g., journaling apps, personal finance trackers, self-hosted dashboards like this project tracker, tools like my news aggregator).
+- **Solo development projects**: Software created by a single developer for their own use, often without concern for scalability or team collaboration.
+- **Customised automation**: Scripts or apps built to streamline a single person's workflow, like Python scripts for organizing files or tracking habits.
+
 Developer : Diane Corriette
+<br>
 https://www.djangify.com 
