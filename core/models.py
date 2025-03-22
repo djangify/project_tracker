@@ -25,8 +25,9 @@ class SiteConfiguration(models.Model):
     
     # Add social media links
     twitter_url = models.URLField(blank=True)
-    facebook_url = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True)
     github_url = models.URLField(blank=True)
+    facebook_url = models.URLField(blank=True)
     
     # Add branding
     logo = models.ImageField(upload_to='site/', blank=True, null=True)

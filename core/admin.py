@@ -12,7 +12,7 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
             'fields': ('enable_work_timer', 'maintenance_mode')
         }),
         ('Social Media', {
-            'fields': ('twitter_url', 'facebook_url', 'github_url')
+            'fields': ('twitter_url', 'linkedin_url', 'github_url', 'facebook_url')
         }),
         ('Branding', {
             'fields': ('logo', 'favicon', 'default_og_image')
