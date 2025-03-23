@@ -5,7 +5,7 @@ from .models import Project, Task, WorkSession
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'is_completed', 'created_at']
+        fields = ['id', 'title', 'description', 'is_completed', 'created_at', 'order']
 
 class WorkSessionSerializer(serializers.ModelSerializer):
     duration_minutes = serializers.ReadOnlyField()

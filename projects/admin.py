@@ -5,6 +5,8 @@ from .models import Project, Task, WorkSession
 class TaskInline(admin.TabularInline):
     model = Task
     extra = 1
+    fields = ('title', 'description', 'is_completed', 'order')
+    ordering = ('order',)
 
 class WorkSessionInline(admin.TabularInline):
     model = WorkSession
@@ -20,9 +22,10 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'project', 'is_completed', 'created_at')
+    list_display = ('title', 'project', 'is_completed', 'order', 'created_at')
     list_filter = ('is_completed', 'project')
     search_fields = ('title', 'description')
+    list_editable = ('order',) 
 
 @admin.register(WorkSession)
 class WorkSessionAdmin(admin.ModelAdmin):

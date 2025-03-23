@@ -30,9 +30,13 @@ class Task(models.Model):
     description = models.TextField(blank=True)
     is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    order = models.IntegerField(default=0)
     
     def __str__(self):
         return self.title
+    
+    class Meta:
+        ordering = ['order', 'created_at'] 
 
 class WorkSession(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='work_sessions')
