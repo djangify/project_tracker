@@ -1,6 +1,6 @@
 <!-- projects/templates/projects/project_detail.html -->
 {% extends 'base.html' %}
-
+{% load static %}
 {% block title %}{{ project.name }} - Project Tracker{% endblock %}
 
 {% block content %}
@@ -42,7 +42,7 @@
             <div class="mt-6">
                 <h2 class="text-xl font-semibold text-gray-700 mb-2">Description</h2>
                 {% if project.description %}
-                <p class="text-gray-700">{{ project.description }}</p>
+                <p class="text-gray-900">{{ project.description|linebreaks }}</p>
                 {% else %}
                 <p class="text-gray-500 italic">No description provided</p>
                 {% endif %}

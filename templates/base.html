@@ -1,4 +1,5 @@
 <!-- templates/base.html -->
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,7 +28,7 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{% if site_config.favicon %}{{ site_config.favicon.url }}{% else %}{% block favicon %}/static/images/favicon.ico{% endblock %}{% endif %}">
     
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="{% static 'css/output.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-gray-100 min-h-screen flex flex-col">
