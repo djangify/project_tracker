@@ -1,6 +1,7 @@
 # projects/models.py
 from django.db import models
 from django.utils import timezone
+from django_prose_editor.fields import ProseEditorField
 
 class Project(models.Model):
     STATUS_CHOICES = [
@@ -10,7 +11,7 @@ class Project(models.Model):
     ]
     
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
+    description = ProseEditorField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -27,7 +28,7 @@ class Project(models.Model):
 class Task(models.Model):
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
     title = models.CharField(max_length=200)
-    description = models.TextField(blank=True)
+    description = ProseEditorField()
     is_completed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     order = models.IntegerField(default=0)

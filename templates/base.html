@@ -28,6 +28,10 @@
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{% if site_config.favicon %}{{ site_config.favicon.url }}{% else %}{% block favicon %}/static/images/favicon.ico{% endblock %}{% endif %}">
     
+    <!-- importmap for prose editor, add before other scripts -->
+    {{ importmap }}
+    
+    <!-- stylesheet -->
     <link href="{% static 'css/output.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
 </head>
