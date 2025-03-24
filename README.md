@@ -8,7 +8,9 @@ I used Claude.ai to help me build this project. I knew what I wanted but didn't 
 
 It look less than 10 hours to complete and it was working and ready to use.
 
-Right now I am only using this in local development. I may deploy it at some stage but that isn't urgent right now.
+The project has been deployed here
+
+https://tracker.djangify.com/ 
 
 ## Features
 

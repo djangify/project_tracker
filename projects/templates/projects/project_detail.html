@@ -67,7 +67,6 @@
                 </div>
             </div>
         </div>
-
         <!-- Tasks Section -->
         <div class="p-6 border-b">
             <div class="flex justify-between items-center mb-4">
@@ -82,7 +81,16 @@
                 {% for task in project.tasks.all %}
                 <div class="py-3">
                     <div class="flex items-start">
-                        <input type="checkbox" {% if task.is_completed %}checked{% endif %} class="mt-1 mr-3">
+                        <form method="post" action="{% url 'projects:task_toggle' task.id %}" class="mt-1 mr-3">
+                            {% csrf_token %}
+                            <button type="submit" class="h-4 w-4 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 {% if task.is_completed %}bg-indigo-600{% endif %}">
+                                {% if task.is_completed %}
+                                <svg class="h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                                {% endif %}
+                            </button>
+                        </form>
                         <div class="flex-1">
                             <h3 class="font-medium text-gray-800 {% if task.is_completed %}line-through text-gray-500{% endif %}">
                                 {{ task.title }}
@@ -95,11 +103,14 @@
                             <p class="text-xs text-gray-500 mt-1">Created: {{ task.created_at|date:"M d, Y" }}</p>
                         </div>
                         <div class="ml-4">
-                            <button class="text-gray-400 hover:text-gray-600">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                                </svg>
-                            </button>
+                            <div class="relative inline-block text-left">
+                                <button type="button" class="text-gray-400 hover:text-gray-600" id="task-menu-{{ task.id }}" aria-expanded="true" aria-haspopup="true">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                                    </svg>
+                                </button>
+                                <!-- Dropdown menu would go here if needed -->
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -7,6 +7,8 @@ from django.utils import timezone
 from rest_framework import viewsets
 from django import forms
 from django.views.generic import DeleteView
+from django.views.generic import View
+from django.http import HttpResponseRedirect
 
 from .models import Project, Task, WorkSession
 from .serializers import ProjectSerializer, TaskSerializer, WorkSessionSerializer
@@ -137,3 +139,13 @@ class WorkSessionDeleteView(LoginRequiredMixin, DeleteView):
         context = super().get_context_data(**kwargs)
         context['project'] = self.object.project
         return context
+    
+class TaskToggleCompletionView(LoginRequiredMixin, View):
+    """
+    Toggle the completion status of a task
+    """
+    def post(self, request, *args, **kwargs):
+        task = get_object_or_404(Task, pk=kwargs['pk'])
+        task.is_completed = not task.is_completed
+        task.save()
+        return HttpResponseRedirect(reverse('projects:project_detail', kwargs={'pk': task.project.id}))
