@@ -30,12 +30,12 @@
                     </div>
                 </div>
                 <div class="space-x-2">
-                    <a href="#" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                    <a href="{% url 'projects:project_edit' project.id %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
                         Edit
                     </a>
-                    <button class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
+                    <a href="{% url 'projects:start_session' project.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
                         Start Session
-                    </button>
+                    </a>
                 </div>
             </div>
             
@@ -72,9 +72,9 @@
         <div class="p-6 border-b">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold text-gray-800">Tasks</h2>
-                <button class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-1 px-3 rounded">
+                <a href="{% url 'projects:task_create' project.id %}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-1 px-3 rounded">
                     Add Task
-                </button>
+                </a>
             </div>
             
             {% if project.tasks.exists %}
@@ -111,14 +111,13 @@
             </div>
             {% endif %}
         </div>
-
         <!-- Work Sessions Section -->
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold text-gray-800">Work Sessions</h2>
-                <button class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-1 px-3 rounded">
+                <a href="{% url 'projects:session_create' project.id %}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-1 px-3 rounded">
                     Log Session
-                </button>
+                </a>
             </div>
             
             {% if project.work_sessions.exists %}
@@ -145,8 +144,8 @@
                             </td>
                             <td class="px-6 py-4 text-sm text-gray-500">{{ session.notes|truncatechars:50 }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <a href="#" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
-                                <a href="#" class="text-red-600 hover:text-red-900">Delete</a>
+                                <a href="{% url 'projects:session_edit' session.id %}" class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
+                                <a href="{% url 'projects:session_delete' session.id %}" class="text-red-600 hover:text-red-900">Delete</a>
                             </td>
                         </tr>
                         {% endfor %}

@@ -147,3 +147,6 @@ if DEBUG:
         'rest_framework.permissions.AllowAny',
     ]
     
+
+LOGIN_URL = '/admin/login/'  
+LOGIN_REDIRECT_URL = '/'  # Redirect to home page after login

@@ -1,0 +1,58 @@
+<!-- projects/templates/projects/task_form.html -->
+{% extends 'base.html' %}
+{% block title %}Add Task - {{ project.name }} - Project Tracker{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{% url 'projects:project_detail' project.id %}" class="text-indigo-600 hover:text-indigo-800 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            Back to project
+        </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Add Task</h1>
+        <p class="text-gray-600 mb-6">Project: {{ project.name }}</p>
+        
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700">Task Title</label>
+                    <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                    {% if form.title.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.title.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
+                
+                <div>
+                    <label for="{{ form.description.id_for_label }}" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="{{ form.description.name }}" id="{{ form.description.id_for_label }}" rows="3" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                </div>
+                
+                <div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="{{ form.is_completed.name }}" id="{{ form.is_completed.id_for_label }}" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                        <label for="{{ form.is_completed.id_for_label }}" class="ml-2 block text-sm text-gray-700">
+                            Mark as completed
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end">
+                <a href="{% url 'projects:project_detail' project.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded mr-2">
+                    Cancel
+                </a>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                    Add Task
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
