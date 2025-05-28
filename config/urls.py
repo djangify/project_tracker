@@ -4,8 +4,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
+from django.views.static import serve
 
-# Add this function
+
 def redirect_to_admin_login(request):
     return redirect('/admin/login/?next=' + request.GET.get('next', '/'))
 
@@ -15,9 +16,10 @@ urlpatterns = [
     path('projects/', include('projects.urls')),
     # login redirection
     path('accounts/login/', redirect_to_admin_login, name='login'),
+    path('static/<path:path>', serve, {
+        'document_root': settings.STATIC_ROOT,
+    }),
+    path('media/<path:path>', serve, {
+        'document_root': settings.MEDIA_ROOT,
+    }),
 ]
-
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

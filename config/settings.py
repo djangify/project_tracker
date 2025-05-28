@@ -1,10 +1,10 @@
 from pathlib import Path
-import pymysql 
+
 import environ
 import os
 import sys
 
-pymysql.install_as_MySQLdb()
+
 
 # Initialize environment variables
 env = environ.Env()
@@ -12,20 +12,20 @@ env = environ.Env()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'localhost:8000']
+# Read .env file - important to specify the path
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+ALLOWED_HOSTS = ['tracker.djangify.com', 'www.tracker.djangify.com']
 
 # CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost",
-    "http://127.0.0.1",
-    "http://localhost:8000",
+    "https://tracker.djangify.com",
+    "https://www.tracker.djangify.com",
 ]
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env("SECRET_KEY", default="your-secret-key-here")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 
 # Application definition
@@ -37,8 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_prose_editor',
     'rest_framework',
+    'django_prose_editor',
     'projects',
     'core',
 ]
@@ -130,6 +130,10 @@ MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
+# WhiteNoise configuration
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django REST Framework settings
@@ -141,12 +145,20 @@ REST_FRAMEWORK = {
     ],
 }
 
-# If in DEBUG mode, allow any permissions for easier development
-if DEBUG:
-    REST_FRAMEWORK['DEFAULT_PERMISSION_CLASSES'] = [
-        'rest_framework.permissions.AllowAny',
-    ]
-    
+# Security settings
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_HSTS_SECONDS = 31536000  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# IP Rate limiting settings
+IP_RATE_LIMIT_MAX_ATTEMPTS = 10  
+IP_RATE_LIMIT_TIMEOUT = 500  
 
 LOGIN_URL = '/admin/login/'  
-LOGIN_REDIRECT_URL = '/'  # Redirect to home page after login
+LOGIN_REDIRECT_URL = '/' 
