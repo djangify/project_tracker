@@ -1,35 +1,41 @@
 from pathlib import Path
-
 import environ
 import os
 import sys
 
-
-
 # Initialize environment variables
 env = environ.Env()
+environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent, '.env'))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Read .env file - important to specify the path
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-
-ALLOWED_HOSTS = ['tracker.djangify.com', 'www.tracker.djangify.com']
+ALLOWED_HOSTS = ['tracker.djangify.com','65.108.89.200', 'www.tracker.djangify.com', '.djangify.com']
 
 # CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS = [
     "https://tracker.djangify.com",
     "https://www.tracker.djangify.com",
+    "https://65.108.89.200",
+    "http://tracker.djangify.com",
 ]
 
 SECRET_KEY = env("SECRET_KEY", default="your-secret-key-here")
-
 DEBUG = False
 
+# Database
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': env('DATABASE_NAME'),
+        'USER': env('DATABASE_USER'),
+        'PASSWORD': env('DATABASE_PASSWORD'),
+        'HOST': env('DATABASE_HOST', default='localhost'),
+        'PORT': env('DATABASE_PORT', default='5432'),
+    }
+}
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -76,26 +82,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
-
-# Database
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.mysql",
-        "NAME": env("DATABASE_NAME"),
-        "USER": env("DATABASE_USER"),
-        "PASSWORD": env("DATABASE_PASSWORD"),
-        "HOST": env("DATABASE_HOST", default="127.0.0.1"),
-        "PORT": env("DATABASE_PORT", default="3306"),
-        "OPTIONS": {
-            "charset": "utf8mb4",
-            "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
-            "use_unicode": True,
-            "connect_timeout": 10,
-            "autocommit": True,
-        },
-    },
-}
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -146,8 +132,6 @@ REST_FRAMEWORK = {
 }
 
 # Security settings
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -155,6 +139,12 @@ X_FRAME_OPTIONS = 'DENY'
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_HTTPONLY = True
+
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = False
 
 # IP Rate limiting settings
 IP_RATE_LIMIT_MAX_ATTEMPTS = 10  

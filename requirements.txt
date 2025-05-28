@@ -8,7 +8,7 @@ django-prose-editor
 gunicorn
 pillow
 PyMySQL
-python-dotenv
+psycopg2-binary
 python-environ 
 whitenoise
 
