@@ -7,7 +7,6 @@ django-cors-headers
 django-prose-editor
 gunicorn
 pillow
-PyMySQL
 psycopg2-binary
 python-environ 
 whitenoise

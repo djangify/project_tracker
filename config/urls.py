@@ -16,9 +16,6 @@ urlpatterns = [
     path('projects/', include('projects.urls')),
     # login redirection
     path('accounts/login/', redirect_to_admin_login, name='login'),
-    path('static/<path:path>', serve, {
-        'document_root': settings.STATIC_ROOT,
-    }),
     path('media/<path:path>', serve, {
         'document_root': settings.MEDIA_ROOT,
     }),

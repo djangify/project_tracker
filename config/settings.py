@@ -10,7 +10,7 @@ environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent, '.env'
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ALLOWED_HOSTS = ['tracker.djangify.com','65.108.89.200', 'www.tracker.djangify.com', '.djangify.com']
+ALLOWED_HOSTS = ['tracker.djangify.com','65.108.89.200', 'www.tracker.djangify.com', '.djangify.com', '127.0.0.1:8000', '127.0.0.1', 'localhost',]
 
 # CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS = [
@@ -18,6 +18,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://www.tracker.djangify.com",
     "https://65.108.89.200",
     "http://tracker.djangify.com",
+    "http://127.0.0.1:8000",
+    "http://localhost:8000",
 ]
 
 SECRET_KEY = env("SECRET_KEY", default="your-secret-key-here")
