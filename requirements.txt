@@ -1,0 +1,27 @@
+# Core Django + essential packages
+Django==6.0
+django-environ
+django-tinymce
+django-widget-tweaks
+django-js-asset
+django-storages
+djangorestframework
+django-prose-editor
+whitenoise
+# PostgreSQL database
+psycopg[binary]
+# Email, security, and deployment
+gunicorn
+cryptography
+# Stripe payments
+stripe
+# Image + media handling
+Pillow
+# Utility packages
+requests
+beautifulsoup4
+django-widget-tweaks
+# Type and parsing dependencies
+typing_extensions
+
+

@@ -1,0 +1,59 @@
+# --- IDEs and editors ---
+.vscode/
+.idea/
+*.sublime-*
+*.code-workspace
+
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.env
+.env.local
+venv/
+ENV/
+env/
+.venv/
+db.sqlite3
+db.sqlite3-journal
+local_settings.py
+mtdify/settings/local.py
+*.log
+*.pot
+*.pyc
+*.pyo
+*.mo
+
+# --- Build directories ---
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+develop-eggs/
+sdist/
+var/
+lib/
+lib64/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- Static and media ---
+media/
+staticfiles/
+static/
+export.json
+
+# --- Node / Tailwind ---
+node_modules/
+package-lock.json
+package.json
+tailwind.config.js
+
+# --- OS / Misc ---
+.DS_Store
+Thumbs.db
