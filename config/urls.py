@@ -6,17 +6,27 @@ from django.conf.urls.static import static
 from django.shortcuts import redirect
 from django.views.static import serve
 
+# Customize admin site
+admin.site.site_header = "Project Tracker"
+admin.site.site_title = "Project Tracker Admin Portal"
+admin.site.index_title = "Welcome to Project Tracker"
+
 
 def redirect_to_admin_login(request):
-    return redirect('/admin/login/?next=' + request.GET.get('next', '/'))
+    return redirect("/admin/login/?next=" + request.GET.get("next", "/"))
+
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', include('core.urls')),
-    path('projects/', include('projects.urls')),
+    path("admin/", admin.site.urls),
+    path("", include("core.urls")),
+    path("projects/", include("projects.urls")),
     # login redirection
-    path('accounts/login/', redirect_to_admin_login, name='login'),
-    path('media/<path:path>', serve, {
-        'document_root': settings.MEDIA_ROOT,
-    }),
+    path("accounts/login/", redirect_to_admin_login, name="login"),
+    path(
+        "media/<path:path>",
+        serve,
+        {
+            "document_root": settings.MEDIA_ROOT,
+        },
+    ),
 ]

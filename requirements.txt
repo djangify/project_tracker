@@ -1,27 +1,29 @@
-# Core Django + essential packages
+-e git+https://github.com/djangify/adminita.git@e406bf2cd0bcd378a99eb9fdb5354771c0c1f396#egg=adminita
+asgiref
+beautifulsoup4
+certifi
+cffi
+charset-normalizer
+cryptography
 Django==6.0
+psycopg[binary]
+django-cors-headers
 django-environ
+django-js-asset
+django-prose-editor
+django-storages
 django-tinymce
 django-widget-tweaks
-django-js-asset
-django-storages
 djangorestframework
-django-prose-editor
-whitenoise
-# PostgreSQL database
-psycopg[binary]
-# Email, security, and deployment
 gunicorn
-cryptography
-# Stripe payments
-stripe
-# Image + media handling
-Pillow
-# Utility packages
+idna
+packaging
+pillow
+pycparser
 requests
-beautifulsoup4
-django-widget-tweaks
-# Type and parsing dependencies
+soupsieve
+sqlparse
 typing_extensions
-
-
+tzdata
+urllib3
+whitenoise
