@@ -10,7 +10,6 @@ psycopg[binary]
 django-cors-headers
 django-environ
 django-js-asset
-django-prose-editor
 django-storages
 django-tinymce
 django-widget-tweaks
