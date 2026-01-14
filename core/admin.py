@@ -1,4 +1,3 @@
-# core/admin.py
 from django.contrib import admin
 from adminita.utils import AlwaysVisibleAdmin
 from .models import SiteConfiguration
@@ -6,6 +5,14 @@ from .models import SiteConfiguration
 
 @admin.register(SiteConfiguration)
 class SiteConfigurationAdmin(AlwaysVisibleAdmin):
+    """
+    Admin configuration for the SiteConfiguration singleton.
+    Ensures the model:
+    - Always appears in the admin sidebar
+    - Can always be opened and edited
+    - Only allows one instance
+    """
+
     list_display = ["site_name"]
     list_display_links = ["site_name"]
 
@@ -22,17 +29,18 @@ class SiteConfigurationAdmin(AlwaysVisibleAdmin):
         ("Branding", {"fields": ("logo", "favicon", "default_og_image")}),
     )
 
-    # ALWAYS allow viewing and editing the single record
+    # Always allow viewing
     def has_view_permission(self, request, obj=None):
         return True
 
+    # Always allow editing the singleton instance
     def has_change_permission(self, request, obj=None):
         return True
 
-    # Allow adding only if none exists
+    # Allow adding only when no instance exists
     def has_add_permission(self, request):
         return not SiteConfiguration.objects.exists()
 
-    # DO NOT block delete — Django admin breaks if you do
+    # Allow delete so Django admin does not break
     def has_delete_permission(self, request, obj=None):
         return True

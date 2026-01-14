@@ -11,10 +11,11 @@ environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent, ".env"
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 ALLOWED_HOSTS = [
+    "tracker.todiane.com",
+    "www.tracker.todiane.com",
     "tracker.djangify.com",
     "65.108.89.200",
     "www.tracker.djangify.com",
-    ".djangify.com",
     "127.0.0.1:8000",
     "127.0.0.1",
     "localhost",
@@ -104,6 +105,8 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
+
+PRIMARY_DOMAIN = "https://tracker.todiane.com"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
