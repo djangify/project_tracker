@@ -12,55 +12,48 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ALLOWED_HOSTS = [
     "tracker.todiane.com",
-    "www.tracker.todiane.com",
     "tracker.djangify.com",
-    "65.108.89.200",
-    "www.tracker.djangify.com",
-    "127.0.0.1:8000",
     "127.0.0.1",
-    "localhost",
 ]
 
 # CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS = [
-    "https://tracker.djangify.com",
-    "https://www.tracker.djangify.com",
-    "https://65.108.89.200",
-    "http://tracker.djangify.com",
+    "https://tracker.todiane.com",
+    "http://tracker.todiane.com",
     "http://127.0.0.1:8000",
-    "http://localhost:8000",
+    "http://tracker.djangify.com",
+    "https://tracker.djangify.com",
 ]
 
 SECRET_KEY = env("SECRET_KEY", default="your-secret-key-here")
 DEBUG = False
 
 # Database
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": env("DATABASE_NAME"),
-#         "USER": env("DATABASE_USER"),
-#         "PASSWORD": env("DATABASE_PASSWORD"),
-#         "HOST": env("DATABASE_HOST", default="localhost"),
-#         "PORT": env("DATABASE_PORT", default="5432"),
-#     }
-# }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("DATABASE_NAME"),
+        "USER": env("DATABASE_USER"),
+        "PASSWORD": env("DATABASE_PASSWORD"),
+        "HOST": env("DATABASE_HOST", default="localhost"),
+        "PORT": env("DATABASE_PORT", default="5432"),
+    }
+}
 
 
 # =======================================================
 # LOCAL DATABASE (SQLite)
 # =======================================================
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-}
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
 # Application definition
 INSTALLED_APPS = [
-    "adminita",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -135,7 +128,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
-    "C:/Dev/Projects/adminita/adminita/static",  # Add this
 ]
 
 
@@ -170,6 +162,9 @@ SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False

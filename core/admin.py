@@ -1,10 +1,9 @@
 from django.contrib import admin
-from adminita.utils import AlwaysVisibleAdmin
 from .models import SiteConfiguration
 
 
 @admin.register(SiteConfiguration)
-class SiteConfigurationAdmin(AlwaysVisibleAdmin):
+class SiteConfigurationAdmin(admin.ModelAdmin):
     """
     Admin configuration for the SiteConfiguration singleton.
     Ensures the model:

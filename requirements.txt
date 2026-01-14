@@ -1,4 +1,4 @@
--e git+https://github.com/djangify/adminita.git@e406bf2cd0bcd378a99eb9fdb5354771c0c1f396#egg=adminita
+
 asgiref
 beautifulsoup4
 certifi
