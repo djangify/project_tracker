@@ -1,0 +1,19 @@
+services:
+  web:
+    build: .
+    container_name: tracker_web
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data/db:/app/db
+      - ./data/media:/app/media
+      - ./data/logs:/app/logs
+      - ./staticfiles:/app/staticfiles
+    ports:
+      - "8009:8000"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5

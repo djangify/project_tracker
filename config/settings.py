@@ -28,29 +28,20 @@ CSRF_TRUSTED_ORIGINS = [
 SECRET_KEY = env("SECRET_KEY", default="your-secret-key-here")
 DEBUG = False
 
-# Database
+
+# -----------------------------------------------------------------------------
+# Database (SQLite)
+# -----------------------------------------------------------------------------
+# Database - SQLite default for Docker. Use in production
+# DATABASES = {"default": env.db(default="sqlite:////app/db/db.sqlite3")}
+
+# Database - SQLite. Use in development
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": env("DATABASE_NAME"),
-        "USER": env("DATABASE_USER"),
-        "PASSWORD": env("DATABASE_PASSWORD"),
-        "HOST": env("DATABASE_HOST", default="localhost"),
-        "PORT": env("DATABASE_PORT", default="5432"),
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "data" / "db" / "db.sqlite3",
     }
 }
-
-
-# =======================================================
-# LOCAL DATABASE (SQLite)
-# =======================================================
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
 
 # Application definition
 INSTALLED_APPS = [

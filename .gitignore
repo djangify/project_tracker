@@ -57,3 +57,7 @@ tailwind.config.js
 # --- OS / Misc ---
 .DS_Store
 Thumbs.db
+
+data/
+data/db
+data/logs
