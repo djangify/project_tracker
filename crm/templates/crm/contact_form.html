@@ -1,0 +1,123 @@
+<!-- crm/templates/crm/contact_form.html -->
+{% extends 'base.html' %}
+{% block title %}{% if object %}Edit {{ object.name }}{% else %}Add Contact{% endif %} - CRM{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{% if object %}{% url 'crm:contact_detail' object.id %}{% else %}{% url 'crm:contact_list' %}{% endif %}" class="text-indigo-600 hover:text-indigo-800 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            Back to {% if object %}contact{% else %}contacts{% endif %}
+        </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6">{% if object %}Edit Contact{% else %}Add New Contact{% endif %}</h1>
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="text-red-500 text-sm">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" required>
+                    {% if form.name.errors %}<p class="text-red-500 text-xs mt-1">{{ form.name.errors|join:", " }}</p>{% endif %}
+                </div>
+
+                <div>
+                    <label for="{{ form.platform.id_for_label }}" class="block text-sm font-medium text-gray-700">Platform found on</label>
+                    <select name="{{ form.platform.name }}" id="{{ form.platform.id_for_label }}" class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        {% for value, display in form.fields.platform.choices %}
+                        <option value="{{ value }}" {% if form.platform.value == value %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="{{ form.social_handle.id_for_label }}" class="block text-sm font-medium text-gray-700">Social handle / username</label>
+                    <input type="text" name="{{ form.social_handle.name }}" id="{{ form.social_handle.id_for_label }}" value="{{ form.social_handle.value|default:'' }}" placeholder="@username" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="{{ form.profile_url.id_for_label }}" class="block text-sm font-medium text-gray-700">Profile URL</label>
+                    <input type="url" name="{{ form.profile_url.name }}" id="{{ form.profile_url.id_for_label }}" value="{{ form.profile_url.value|default:'' }}" placeholder="https://..." class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" name="{{ form.email.name }}" id="{{ form.email.id_for_label }}" value="{{ form.email.value|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700">Status</label>
+                    <select name="{{ form.status.name }}" id="{{ form.status.id_for_label }}" class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        {% for value, display in form.fields.status.choices %}
+                        <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>{{ display }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="{{ form.tags.id_for_label }}" class="block text-sm font-medium text-gray-700">Tags</label>
+                    <input type="text" name="{{ form.tags.name }}" id="{{ form.tags.id_for_label }}" value="{{ form.tags.value|default:'' }}" placeholder="coach, warm lead" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <p class="text-xs text-gray-500 mt-1">Comma-separated</p>
+                </div>
+
+                <div>
+                    <label for="{{ form.follow_up_date.id_for_label }}" class="block text-sm font-medium text-gray-700">Follow-up date</label>
+                    <input type="date" name="{{ form.follow_up_date.name }}" id="{{ form.follow_up_date.id_for_label }}" value="{{ form.follow_up_date.value|date:'Y-m-d'|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label for="{{ form.revenue.id_for_label }}" class="block text-sm font-medium text-gray-700">Revenue (&pound;)</label>
+                    <input type="number" step="0.01" min="0" name="{{ form.revenue.name }}" id="{{ form.revenue.id_for_label }}" value="{{ form.revenue.value|default:'' }}" placeholder="0.00" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <p class="text-xs text-gray-500 mt-1">Total this contact has paid</p>
+                </div>
+            </div>
+
+            <div class="border-t pt-4" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <div class="flex items-center">
+                    <input type="checkbox" name="{{ form.joined_live_it_list.name }}" id="{{ form.joined_live_it_list.id_for_label }}" {% if form.joined_live_it_list.value %}checked{% endif %} class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                    <label for="{{ form.joined_live_it_list.id_for_label }}" class="ml-2 text-sm text-gray-700">Joined the free Live It List</label>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" name="{{ form.made_purchase.name }}" id="{{ form.made_purchase.id_for_label }}" {% if form.made_purchase.value %}checked{% endif %} class="h-4 w-4 text-green-600 border-gray-300 rounded">
+                    <label for="{{ form.made_purchase.id_for_label }}" class="ml-2 text-sm text-gray-700">Made a purchase</label>
+                </div>
+                {% if form.follow_up_1_done %}
+                <div class="border-t pt-3" style="display: flex; flex-wrap: wrap; gap: 1.25rem;">
+                    <div class="flex items-center">
+                        <input type="checkbox" name="{{ form.follow_up_1_done.name }}" id="{{ form.follow_up_1_done.id_for_label }}" {% if form.follow_up_1_done.value %}checked{% endif %} class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        <label for="{{ form.follow_up_1_done.id_for_label }}" class="ml-2 text-sm text-gray-700">Follow-up 1 done</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="{{ form.follow_up_2_done.name }}" id="{{ form.follow_up_2_done.id_for_label }}" {% if form.follow_up_2_done.value %}checked{% endif %} class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        <label for="{{ form.follow_up_2_done.id_for_label }}" class="ml-2 text-sm text-gray-700">Follow-up 2 done</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" name="{{ form.follow_up_3_done.name }}" id="{{ form.follow_up_3_done.id_for_label }}" {% if form.follow_up_3_done.value %}checked{% endif %} class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                        <label for="{{ form.follow_up_3_done.id_for_label }}" class="ml-2 text-sm text-gray-700">Follow-up 3 done</label>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700">Notes</label>
+                <textarea name="{{ form.notes.name }}" id="{{ form.notes.id_for_label }}" rows="4" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">{{ form.notes.value|default:'' }}</textarea>
+            </div>
+
+            <div class="flex justify-end">
+                <a href="{% if object %}{% url 'crm:contact_detail' object.id %}{% else %}{% url 'crm:contact_list' %}{% endif %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded mr-2">Cancel</a>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">{% if object %}Update{% else %}Add{% endif %} Contact</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

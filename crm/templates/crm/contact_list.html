@@ -1,0 +1,149 @@
+<!-- crm/templates/crm/contact_list.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Contacts - CRM{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">My Contacts</h1>
+        <div class="space-x-2">
+            <a href="{% url 'crm:followups' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
+                Follow-ups
+            </a>
+            <a href="{% url 'crm:contact_create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                Add Contact
+            </a>
+        </div>
+    </div>
+
+    <!-- Dashboard totals -->
+    <div class="mb-6" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem;">
+        <div class="bg-white shadow rounded-lg p-4">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Messages Sent</p>
+            <p class="text-3xl font-bold text-gray-800 mt-1">{{ stats.messages_sent }}</p>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Responses</p>
+            <p class="text-3xl font-bold text-gray-800 mt-1">{{ stats.responses }}</p>
+            <p class="text-xs text-gray-400 mt-1">{{ stats.response_rate }}% reply rate</p>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Live It List</p>
+            <p class="text-3xl font-bold text-indigo-600 mt-1">{{ stats.list_signups }}</p>
+            <p class="text-xs text-gray-400 mt-1">free signups</p>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Sales</p>
+            <p class="text-3xl font-bold text-green-600 mt-1">{{ stats.sales }}</p>
+        </div>
+        <div class="bg-white shadow rounded-lg p-4">
+            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</p>
+            <p class="text-3xl font-bold text-green-600 mt-1">&pound;{{ stats.revenue }}</p>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white shadow rounded-lg mb-6 p-4 space-y-4">
+        <form method="get" class="flex flex-nowrap gap-4 items-end">
+            <div class="shrink-0" style="width: 600px;">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Search</label>
+                <input type="text" name="q" value="{{ search }}" placeholder="Name, handle, email, tag..."
+                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Platform</label>
+                <select name="platform" class="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="all">All platforms</option>
+                    {% for value, label in platform_choices %}
+                    <option value="{{ value }}" {% if current_platform == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
+                <select name="status" class="border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <option value="all">All statuses</option>
+                    {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Filter</button>
+            <a href="{% url 'crm:contact_list' %}" class="text-sm text-gray-500 hover:text-gray-700 py-2 px-2">Clear</a>
+        </form>
+    </div>
+
+    <!-- Contacts table -->
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Platform</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Handle</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Follow-up</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for contact in contacts %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'crm:contact_detail' contact.id %}" class="font-medium text-gray-800 hover:text-indigo-600">{{ contact.name }}</a>
+                            {% if contact.tag_list %}
+                            <div class="mt-1 flex flex-wrap gap-1">
+                                {% for tag in contact.tag_list %}
+                                <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ contact.get_platform_display }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {% if contact.profile_url %}
+                            <a href="{{ contact.profile_url }}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-800">{{ contact.social_handle|default:"link" }}</a>
+                            {% else %}
+                            {{ contact.social_handle|default:"—" }}
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full
+                                {% if contact.status == 'new' %}bg-gray-100 text-gray-800{% endif %}
+                                {% if contact.status == 'contacted' %}bg-blue-100 text-blue-800{% endif %}
+                                {% if contact.status == 'replied' %}bg-purple-100 text-purple-800{% endif %}
+                                {% if contact.status == 'in_conversation' %}bg-yellow-100 text-yellow-800{% endif %}
+                                {% if contact.status == 'converted' %}bg-green-100 text-green-800{% endif %}
+                                {% if contact.status == 'dead' %}bg-red-100 text-red-800{% endif %}">
+                                {{ contact.get_status_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if contact.follow_up_date and not contact.follow_ups_complete %}
+                                <span class="{% if contact.follow_up_overdue %}text-red-600 font-medium{% else %}text-gray-600{% endif %}">
+                                    {{ contact.follow_up_date|date:"M d, Y" }}
+                                </span>
+                                {% if contact.current_stage %}<span class="text-xs text-gray-400">(stage {{ contact.current_stage }})</span>{% endif %}
+                            {% else %}
+                                <span class="text-gray-400">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            <a href="{% url 'crm:contact_detail' contact.id %}" class="text-indigo-600 hover:text-indigo-900">View →</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                            No contacts found. Click "Add Contact" to get started.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

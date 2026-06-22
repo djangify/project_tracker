@@ -1,0 +1,177 @@
+<!-- crm/templates/crm/contact_detail.html -->
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ contact.name }} - CRM{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{% url 'crm:contact_list' %}" class="text-indigo-600 hover:text-indigo-800 flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+            </svg>
+            Back to contacts
+        </a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="p-6 border-b">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">{{ contact.name }}</h1>
+                    <div class="flex items-center flex-wrap mt-2" style="gap: 0.75rem;">
+                        <span class="px-3 py-1 text-sm rounded-full
+                            {% if contact.status == 'new' %}bg-gray-100 text-gray-800{% endif %}
+                            {% if contact.status == 'contacted' %}bg-blue-100 text-blue-800{% endif %}
+                            {% if contact.status == 'replied' %}bg-purple-100 text-purple-800{% endif %}
+                            {% if contact.status == 'in_conversation' %}bg-yellow-100 text-yellow-800{% endif %}
+                            {% if contact.status == 'converted' %}bg-green-100 text-green-800{% endif %}
+                            {% if contact.status == 'dead' %}bg-red-100 text-red-800{% endif %}">
+                            {{ contact.get_status_display }}
+                        </span>
+                        <span class="text-sm text-gray-600">{{ contact.get_platform_display }}</span>
+                        {% if contact.joined_live_it_list %}
+                        <span class="px-3 py-1 text-sm rounded-full bg-indigo-100 text-indigo-800">On Live It List</span>
+                        {% endif %}
+                        {% if contact.made_purchase %}
+                        <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Customer{% if contact.revenue %} · &pound;{{ contact.revenue }}{% endif %}</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="space-x-2">
+                    <a href="{% url 'crm:contact_edit' contact.id %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Edit</a>
+                    <a href="{% url 'crm:interaction_create' contact.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">Log Interaction</a>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+                <div class="bg-gray-50 p-4 rounded">
+                    <h3 class="font-medium text-gray-700 text-sm">Handle</h3>
+                    {% if contact.profile_url %}
+                    <a href="{{ contact.profile_url }}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-800">{{ contact.social_handle|default:"View profile" }}</a>
+                    {% else %}
+                    <p>{{ contact.social_handle|default:"—" }}</p>
+                    {% endif %}
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                    <h3 class="font-medium text-gray-700 text-sm">Email</h3>
+                    <p>{% if contact.email %}<a href="mailto:{{ contact.email }}" class="text-indigo-600 hover:text-indigo-800">{{ contact.email }}</a>{% else %}—{% endif %}</p>
+                </div>
+                <div class="bg-gray-50 p-4 rounded">
+                    <h3 class="font-medium text-gray-700 text-sm">Next follow-up</h3>
+                    {% if contact.follow_ups_complete %}
+                        <p class="text-green-600">All stages done</p>
+                    {% elif contact.follow_up_date %}
+                        <p class="{% if contact.follow_up_overdue %}text-red-600 font-medium{% endif %}">
+                            {{ contact.follow_up_date|date:"M d, Y" }}
+                            {% if contact.follow_up_overdue %}<span class="text-sm">(overdue)</span>{% endif %}
+                        </p>
+                    {% else %}
+                        <p class="text-gray-500 italic">None set</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Follow-up stages -->
+            <div class="mt-6 bg-gray-50 p-4 rounded">
+                <h3 class="font-medium text-gray-700 text-sm mb-3">Follow-up stages</h3>
+                <div class="flex flex-wrap" style="gap: 1rem;">
+                    {% for stage in stages %}
+                    <form method="post" action="{% url 'crm:stage_toggle' contact.id stage.num %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'crm:contact_detail' contact.id %}">
+                        <button type="submit" class="flex items-center px-3 py-2 rounded border {% if stage.done %}bg-green-100 border-green-300 text-green-800{% else %}bg-white border-gray-300 text-gray-700 hover:bg-gray-100{% endif %}">
+                            <span class="inline-flex items-center justify-center h-4 w-4 mr-2 rounded border {% if stage.done %}bg-green-600 border-green-600{% else %}border-gray-400{% endif %}">
+                                {% if stage.done %}
+                                <svg class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                                {% endif %}
+                            </span>
+                            Follow-up {{ stage.num }}
+                        </button>
+                    </form>
+                    {% endfor %}
+                </div>
+                <p class="text-xs text-gray-500 mt-2">Ticking a stage schedules the next follow-up 2 days out.</p>
+            </div>
+
+            <!-- Suggested message template for the next stage -->
+            {% if suggested_template %}
+            <div class="mt-4 bg-indigo-50 p-4 rounded">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="font-medium text-indigo-800 text-sm">Suggested message — Follow-up {{ contact.current_stage }}</h3>
+                    <button type="button" onclick="copyTemplate()" id="copyBtn" class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white py-1 px-3 rounded">Copy</button>
+                </div>
+                <p id="templateText" class="text-gray-800 whitespace-pre-line text-sm">{{ suggested_template.message }}</p>
+            </div>
+            {% elif contact.current_stage %}
+            <div class="mt-4 text-xs text-gray-500">
+                No template set for Follow-up {{ contact.current_stage }}.
+                <a href="{% url 'admin:crm_followuptemplate_changelist' %}" class="text-indigo-600 hover:text-indigo-800">Add one in admin</a>.
+            </div>
+            {% endif %}
+
+            {% if contact.tag_list %}
+            <div class="mt-4 flex flex-wrap gap-1">
+                {% for tag in contact.tag_list %}
+                <span class="px-2 py-0.5 text-xs rounded-full bg-indigo-50 text-indigo-700">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if contact.notes %}
+            <div class="mt-6">
+                <h2 class="text-lg font-semibold text-gray-700 mb-2">Notes</h2>
+                <p class="text-gray-900 whitespace-pre-line">{{ contact.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Interaction history -->
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Interaction History</h2>
+                <a href="{% url 'crm:interaction_create' contact.id %}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-1 px-3 rounded">Log Interaction</a>
+            </div>
+
+            {% if contact.interactions.exists %}
+            <div class="space-y-4">
+                {% for interaction in contact.interactions.all %}
+                <div class="border-l-4 {% if interaction.direction == 'outbound' %}border-indigo-400{% else %}border-green-400{% endif %} bg-gray-50 rounded-r p-4">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-sm font-medium text-gray-700">
+                            {{ interaction.get_direction_display }} · {{ interaction.get_channel_display }}
+                        </span>
+                        <span class="text-xs text-gray-500">{{ interaction.date|date:"M d, Y" }}</span>
+                    </div>
+                    <p class="text-gray-800 whitespace-pre-line">{{ interaction.message }}</p>
+                    {% if interaction.image %}
+                    <a href="{{ interaction.image.url }}" target="_blank" rel="noopener noreferrer">
+                        <img src="{{ interaction.image.url }}" alt="Screenshot" class="mt-3 rounded border border-gray-200 max-h-64">
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8 bg-gray-50 rounded">
+                <p class="text-gray-500">No interactions logged yet. Click "Log Interaction" to record what you said.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyTemplate() {
+    var el = document.getElementById('templateText');
+    if (!el) return;
+    var text = el.innerText;
+    var btn = document.getElementById('copyBtn');
+    navigator.clipboard.writeText(text).then(function () {
+        if (btn) { var old = btn.innerText; btn.innerText = 'Copied!'; setTimeout(function(){ btn.innerText = old; }, 1500); }
+    });
+}
+</script>
+{% endblock %}

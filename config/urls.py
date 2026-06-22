@@ -20,6 +20,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("core.urls")),
     path("projects/", include("projects.urls")),
+    path("crm/", include("crm.urls")),
     # login redirection
     path("accounts/login/", redirect_to_admin_login, name="login"),
     path(
