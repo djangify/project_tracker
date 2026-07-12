@@ -1,0 +1,54 @@
+{% comment %}Panel: Today + overdue. Inline-completes tasks via JSON.{% endcomment %}
+<div class="bg-white rounded-lg shadow">
+    <div class="border-b px-6 py-4 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-800">Today</h2>
+        <span class="text-sm text-gray-500">{{ today|date:"l, M d" }}</span>
+    </div>
+    <div class="p-4 space-y-4">
+
+        {% if overdue_tasks %}
+        <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-red-600 mb-1">Overdue</h3>
+            <ul class="divide-y">
+                {% for task in overdue_tasks %}
+                <li class="py-2 flex items-center gap-3" data-task-row>
+                    <button type="button" data-task-toggle="{% url 'projects:task_toggle_json' task.id %}"
+                            class="h-4 w-4 shrink-0 rounded border border-gray-300 hover:border-indigo-500"
+                            aria-label="Complete task"></button>
+                    <div class="min-w-0 flex-1">
+                        <span data-task-title class="text-gray-800">{{ task.title }}</span>
+                        <span class="ml-2 text-xs text-gray-500">{{ task.project.name }}</span>
+                    </div>
+                    <span class="text-xs text-red-600 shrink-0">{{ task.scheduled_date|date:"M d" }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Scheduled today</h3>
+            {% if today_tasks %}
+            <ul class="divide-y">
+                {% for task in today_tasks %}
+                <li class="py-2 flex items-center gap-3" data-task-row>
+                    <button type="button" data-task-toggle="{% url 'projects:task_toggle_json' task.id %}"
+                            class="h-4 w-4 shrink-0 rounded border border-gray-300 hover:border-indigo-500"
+                            aria-label="Complete task"></button>
+                    <div class="min-w-0 flex-1">
+                        <span data-task-title class="text-gray-800">{{ task.title }}</span>
+                        <span class="ml-2 text-xs text-gray-500">{{ task.project.name }}</span>
+                    </div>
+                    {% if task.status == 'in_progress' %}
+                    <span class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full shrink-0">In progress</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-400 text-sm py-2">Nothing scheduled for today.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>

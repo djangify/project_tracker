@@ -1,0 +1,51 @@
+{% comment %}Panel: Work Log — this week's sessions, weekly total, per-project split.{% endcomment %}
+<div class="bg-white rounded-lg shadow">
+    <div class="border-b px-6 py-4 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-800">Work Log</h2>
+        <span class="text-sm text-gray-500">{{ work_total_label }} this week</span>
+    </div>
+    <div class="p-4 space-y-4">
+
+        {% if work_bars %}
+        <div class="space-y-2">
+            {% for bar in work_bars %}
+            <div>
+                <div class="flex justify-between text-xs text-gray-600 mb-0.5">
+                    <span class="truncate">{{ bar.project.name }}</span>
+                    <span class="shrink-0 ml-2">{{ bar.label }}</span>
+                </div>
+                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-2 bg-indigo-500 rounded-full" style="width: {{ bar.pct }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Sessions</h3>
+            {% if work_sessions %}
+            <ul class="divide-y">
+                {% for s in work_sessions %}
+                <li class="py-2 text-sm">
+                    <div class="flex items-center justify-between">
+                        <span class="text-gray-800">
+                            {{ s.project.name }}{% if s.task %} · {{ s.task.title }}{% endif %}
+                        </span>
+                        <span class="text-xs text-gray-500 shrink-0 ml-2">
+                            {{ s.start_time|date:"D M d" }}{% if s.end_time %} · {{ s.duration_minutes|floatformat:0 }}m{% endif %}
+                        </span>
+                    </div>
+                    {% if s.notes %}
+                    <p class="text-xs text-gray-500 mt-0.5 truncate">{{ s.notes }}</p>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-400 text-sm py-2">No work logged this week yet.</p>
+            {% endif %}
+        </div>
+
+    </div>
+</div>

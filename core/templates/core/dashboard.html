@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex items-baseline justify-between mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+        <span class="text-sm text-gray-500">Week of {{ week_start|date:"M d" }} – {{ week_end|date:"M d" }}</span>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {% include "core/dashboard/_today.html" %}
+        {% include "core/dashboard/_work_log.html" %}
+        {% include "core/dashboard/_week.html" %}
+        {% include "core/dashboard/_all_tasks.html" %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    function getCookie(name) {
+        const m = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
+        return m ? m.pop() : "";
+    }
+    const csrftoken = getCookie("csrftoken");
+
+    document.querySelectorAll("[data-task-toggle]").forEach((btn) => {
+        btn.addEventListener("click", async function () {
+            const url = btn.dataset.taskToggle;
+            const resp = await fetch(url, {
+                method: "POST",
+                headers: { "X-CSRFToken": csrftoken },
+            });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            const row = btn.closest("[data-task-row]");
+            if (data.is_completed) {
+                // Completed from an open panel — fade the row out.
+                if (row) {
+                    row.style.transition = "opacity .3s";
+                    row.style.opacity = "0.4";
+                    const label = row.querySelector("[data-task-title]");
+                    if (label) label.classList.add("line-through", "text-gray-400");
+                    btn.classList.add("bg-indigo-600");
+                }
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

@@ -22,6 +22,7 @@ urlpatterns = [
     path('work-session/<int:pk>/edit/', views.WorkSessionUpdateView.as_view(), name='session_edit'),
     path('work-session/<int:pk>/delete/', views.WorkSessionDeleteView.as_view(), name='session_delete'),
     path('task/<int:pk>/toggle/', views.TaskToggleCompletionView.as_view(), name='task_toggle'),
+    path('task/<int:pk>/toggle-json/', views.TaskToggleJSONView.as_view(), name='task_toggle_json'),
     
     # API URLs
     path('api/', include(router.urls)),

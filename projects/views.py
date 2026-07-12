@@ -8,7 +8,7 @@ from rest_framework import viewsets
 from django import forms
 from django.views.generic import DeleteView
 from django.views.generic import View
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 
 from .models import Project, Task, WorkSession
 from .serializers import ProjectSerializer, TaskSerializer, WorkSessionSerializer
@@ -149,3 +149,12 @@ class TaskToggleCompletionView(LoginRequiredMixin, View):
         task.status = 'planned' if task.status == 'done' else 'done'
         task.save()
         return HttpResponseRedirect(reverse('projects:project_detail', kwargs={'pk': task.project.id}))
+
+
+class TaskToggleJSONView(LoginRequiredMixin, View):
+    """Toggle done/planned and return JSON (for inline dashboard checkboxes)."""
+    def post(self, request, *args, **kwargs):
+        task = get_object_or_404(Task, pk=kwargs['pk'])
+        task.status = 'planned' if task.status == 'done' else 'done'
+        task.save()
+        return JsonResponse({'status': task.status, 'is_completed': task.is_completed})

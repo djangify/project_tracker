@@ -1,30 +1,93 @@
 # core/views.py
-from django.views.generic import TemplateView
-from django.db.models import Count
-from projects.models import Project
+from collections import defaultdict
+from datetime import timedelta
 
-class HomeView(TemplateView):
-    template_name = "core/index.html"
-    
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.generic import TemplateView
+
+from projects.models import Project, Task, WorkSession
+from .utils import format_duration
+
+OPEN_STATUSES = ["planned", "in_progress"]
+
+
+@method_decorator(ensure_csrf_cookie, name="dispatch")
+class DashboardView(LoginRequiredMixin, TemplateView):
+    """Cross-business overview: Today, My Week, All Tasks, Work Log."""
+
+    template_name = "core/dashboard.html"
+
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        # Get project statistics for the dashboard
-        context['active_projects'] = Project.objects.filter(status='active').count()
-        context['paused_projects'] = Project.objects.filter(status='paused').count()
-        context['completed_projects'] = Project.objects.filter(status='completed').count()
-        context['total_projects'] = Project.objects.count()
-        
-        # Get recent projects
-        context['recent_projects'] = Project.objects.all().order_by('-updated_at')[:5]
-        
-        # Get high priority projects
-        context['priority_projects'] = Project.objects.filter(
-            status='active'
-        ).order_by('priority')[:5]
-        
-        # Get all projects for the main listing
-        context['projects'] = Project.objects.all().order_by('priority', '-last_worked_on')
-        
-        return context
-    
+        ctx = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        week_start = today - timedelta(days=today.weekday())  # Monday
+        week_end = week_start + timedelta(days=6)
+
+        open_tasks = Task.objects.filter(status__in=OPEN_STATUSES).select_related("project")
+
+        # --- Panel 1: Today ---
+        ctx["today"] = today
+        ctx["today_tasks"] = open_tasks.filter(scheduled_date=today).order_by("project__name")
+        ctx["overdue_tasks"] = open_tasks.filter(scheduled_date__lt=today).order_by(
+            "scheduled_date", "project__name"
+        )
+
+        # --- Panel 2: My Week (clash = 2+ projects on one day) ---
+        week_tasks = (
+            Task.objects.filter(scheduled_date__range=(week_start, week_end))
+            .select_related("project")
+            .order_by("scheduled_date", "project__name")
+        )
+        days = []
+        for i in range(7):
+            d = week_start + timedelta(days=i)
+            day_tasks = [t for t in week_tasks if t.scheduled_date == d]
+            project_ids = {t.project_id for t in day_tasks}
+            days.append(
+                {
+                    "date": d,
+                    "tasks": day_tasks,
+                    "is_today": d == today,
+                    "clash": len(project_ids) >= 2,
+                    "project_count": len(project_ids),
+                }
+            )
+        ctx["week_days"] = days
+
+        # --- Panel 3: All Tasks (open, grouped by project) ---
+        grouped = defaultdict(list)
+        for t in open_tasks.order_by("project__name", "scheduled_date", "order"):
+            grouped[t.project].append(t)
+        ctx["tasks_by_project"] = sorted(
+            grouped.items(), key=lambda kv: kv[0].name.lower()
+        )
+
+        # --- Panel 4: Work Log (this week) ---
+        sessions = (
+            WorkSession.objects.filter(
+                start_time__date__range=(week_start, week_end)
+            )
+            .select_related("project", "task")
+            .order_by("-start_time")
+        )
+        totals = defaultdict(int)
+        for s in sessions:
+            totals[s.project] += int(s.duration_minutes())
+        total_minutes = sum(totals.values())
+        ctx["work_sessions"] = sessions[:15]
+        ctx["work_total_label"] = format_duration(total_minutes) if total_minutes else "0m"
+        ctx["work_bars"] = [
+            {
+                "project": p,
+                "label": format_duration(m),
+                "pct": round(m / total_minutes * 100) if total_minutes else 0,
+            }
+            for p, m in sorted(totals.items(), key=lambda kv: kv[1], reverse=True)
+        ]
+
+        ctx["week_start"] = week_start
+        ctx["week_end"] = week_end
+        return ctx

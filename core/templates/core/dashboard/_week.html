@@ -1,0 +1,37 @@
+{% comment %}Panel: My Week — scheduled tasks per day, clash badge when 2+ projects share a day.{% endcomment %}
+<div class="bg-white rounded-lg shadow">
+    <div class="border-b px-6 py-4">
+        <h2 class="text-xl font-semibold text-gray-800">My Week</h2>
+    </div>
+    <div class="p-4 space-y-3">
+        {% for day in week_days %}
+        <div class="{% if day.is_today %}bg-indigo-50 -mx-1 px-1 rounded{% endif %}">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold {% if day.is_today %}text-indigo-700{% else %}text-gray-700{% endif %}">
+                    {{ day.date|date:"D, M d" }}{% if day.is_today %} · Today{% endif %}
+                </h3>
+                {% if day.clash %}
+                <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full" title="Tasks from more than one business on this day">
+                    ⚠ {{ day.project_count }} businesses
+                </span>
+                {% endif %}
+            </div>
+            {% if day.tasks %}
+            <ul class="mt-1 space-y-1">
+                {% for task in day.tasks %}
+                <li class="flex items-center gap-2 text-sm">
+                    <span class="text-gray-300">•</span>
+                    <span class="{% if task.status == 'done' %}line-through text-gray-400{% else %}text-gray-800{% endif %} truncate">
+                        {{ task.title }}
+                    </span>
+                    <span class="text-xs text-gray-500 shrink-0">{{ task.project.name }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-xs text-gray-300 mt-1">—</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>

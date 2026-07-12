@@ -1,0 +1,40 @@
+{% comment %}Panel: All open tasks grouped by project.{% endcomment %}
+<div class="bg-white rounded-lg shadow">
+    <div class="border-b px-6 py-4 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-800">All Tasks</h2>
+        <a href="{% url 'projects:project_list' %}" class="text-sm text-indigo-600 hover:text-indigo-800">Projects →</a>
+    </div>
+    <div class="p-4">
+        {% if tasks_by_project %}
+        <div class="space-y-4">
+            {% for project, tasks in tasks_by_project %}
+            <div>
+                <h3 class="text-sm font-semibold text-gray-700 mb-1">
+                    <a href="{% url 'projects:project_detail' project.id %}" class="hover:text-indigo-700">{{ project.name }}</a>
+                    <span class="text-gray-400 font-normal">({{ tasks|length }})</span>
+                </h3>
+                <ul class="divide-y">
+                    {% for task in tasks %}
+                    <li class="py-1.5 flex items-center gap-2 text-sm">
+                        {% if task.status == 'in_progress' %}
+                        <span class="w-2 h-2 rounded-full bg-yellow-500 shrink-0" title="In progress"></span>
+                        {% else %}
+                        <span class="w-2 h-2 rounded-full bg-gray-300 shrink-0" title="Planned"></span>
+                        {% endif %}
+                        <span class="text-gray-800 truncate flex-1">{{ task.title }}</span>
+                        {% if task.scheduled_date %}
+                        <span class="text-xs shrink-0 {% if task.is_overdue %}text-red-600{% else %}text-gray-500{% endif %}">
+                            {{ task.scheduled_date|date:"M d" }}
+                        </span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-400 text-sm">No open tasks. 🎉</p>
+        {% endif %}
+    </div>
+</div>
