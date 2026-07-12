@@ -1,0 +1,35 @@
+{% comment %}
+Recursive page tree for the sidebar. Expects `pages` (an iterable of Page).
+Include as: {% include "pages/_page_tree.html" with pages=sidebar_root_pages %}
+{% endcomment %}
+<ul class="space-y-0.5">
+    {% for page in pages %}
+    {% with children=page.visible_children %}
+    <li>
+        <div class="flex items-center group rounded hover:bg-slate-200 px-1 py-0.5">
+            {% if children %}
+            <button type="button" class="tree-toggle w-4 text-slate-400 hover:text-slate-700 shrink-0 text-xs"
+                    data-page="{{ page.id }}" aria-label="Toggle subpages">▸</button>
+            {% else %}
+            <span class="w-4 shrink-0"></span>
+            {% endif %}
+            <a href="{% url 'pages:detail' page.id %}"
+               class="flex-1 truncate text-sm text-slate-700 hover:text-slate-900 py-0.5">
+                {% if page.icon %}{{ page.icon }} {% endif %}{{ page.title }}
+            </a>
+            <form method="post" action="{% url 'pages:create' %}?parent={{ page.id }}" class="shrink-0">
+                {% csrf_token %}
+                <button type="submit"
+                        class="hidden group-hover:inline text-slate-400 hover:text-slate-700 text-sm px-1"
+                        title="Add subpage">+</button>
+            </form>
+        </div>
+        {% if children %}
+        <ul class="tree-children ml-3 hidden" data-parent="{{ page.id }}">
+            {% include "pages/_page_tree.html" with pages=children %}
+        </ul>
+        {% endif %}
+    </li>
+    {% endwith %}
+    {% endfor %}
+</ul>

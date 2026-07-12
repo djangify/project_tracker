@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-    <h1 class="text-3xl font-bold text-gray-800 mb-6">Project Dashboard</h1>
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Project Dashboard</h1>
     
     <!-- Stats Overview -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -43,7 +43,7 @@
                     <div class="py-3">
                         <div class="flex justify-between items-center">
                             <div>
-                                <a href="{% url 'projects:project_detail' project.id %}" class="text-lg font-medium text-blue-600 hover:text-blue-800">
+                                <a href="{% url 'projects:project_detail' project.id %}" class="text-lg font-bold text-gray-900 hover:text-gray-600">
                                     {{ project.name }}
                                 </a>
                                 <p class="text-sm text-gray-600">Updated: {{ project.updated_at|date:"M d, Y" }}</p>
@@ -81,7 +81,7 @@
                     <div class="py-3">
                         <div class="flex justify-between items-center">
                             <div>
-                                <a href="{% url 'projects:project_detail' project.id %}" class="text-lg font-medium text-blue-600 hover:text-blue-800">
+                                <a href="{% url 'projects:project_detail' project.id %}" class="text-lg font-bold text-gray-900 hover:text-gray-600">
                                     {{ project.name }}
                                 </a>
                                 <p class="text-sm text-gray-600">Priority: {{ project.priority }}</p>
@@ -109,7 +109,7 @@
     </div>
     
     <div class="mt-8 text-center">
-        <a href="{% url 'projects:project_list' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg">
+        <a href="{% url 'projects:project_list' %}" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-semibold py-2 px-6 rounded-lg">
             Manage Projects
         </a>
     </div>

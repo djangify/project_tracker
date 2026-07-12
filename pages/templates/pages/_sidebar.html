@@ -1,0 +1,83 @@
+{% comment %}Left sidebar — primary nav for authenticated users. Included from base.html.{% endcomment %}
+<aside id="sidebar" class="hidden md:flex md:flex-col w-60 shrink-0 bg-slate-50 text-slate-700 border-r border-slate-200 overflow-y-auto">
+    <nav class="p-3 space-y-4 flex-1">
+        <div class="space-y-1">
+            <a href="{% url 'core:home' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">🏠 Dashboard</a>
+            <a href="{% url 'projects:project_list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">📁 Projects</a>
+            <a href="{% url 'crm:contact_list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">👥 CRM</a>
+        </div>
+
+        {% if sidebar_favorites %}
+        <div>
+            <h3 class="px-2 text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Favorites</h3>
+            <ul class="space-y-0.5">
+                {% for fav in sidebar_favorites %}
+                <li>
+                    <a href="{% url 'pages:detail' fav.id %}"
+                       class="block px-2 py-0.5 rounded hover:bg-slate-200 text-sm text-slate-700 truncate">
+                        {% if fav.icon %}{{ fav.icon }} {% endif %}{{ fav.title }}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div>
+            <h3 class="px-2 text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Pages</h3>
+            {% if sidebar_root_pages %}
+                {% include "pages/_page_tree.html" with pages=sidebar_root_pages %}
+            {% else %}
+                <p class="px-2 text-xs text-slate-400">No pages yet.</p>
+            {% endif %}
+            <form method="post" action="{% url 'pages:create' %}" class="mt-2 px-1">
+                {% csrf_token %}
+                <button type="submit" class="text-slate-500 hover:text-slate-800 text-sm">+ New page</button>
+            </form>
+        </div>
+    </nav>
+
+    <div class="p-3 border-t border-slate-200">
+        <a href="{% url 'pages:trash' %}"
+           class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-600">🗑 Trash</a>
+    </div>
+</aside>
+
+<script>
+(function () {
+    // Mobile hamburger toggles the sidebar (md:flex keeps it visible on desktop).
+    const toggle = document.getElementById("sidebar-toggle");
+    const sidebar = document.getElementById("sidebar");
+    if (toggle && sidebar) {
+        toggle.addEventListener("click", () => sidebar.classList.toggle("hidden"));
+    }
+
+    // Expand/collapse the page tree, persisting open nodes in localStorage.
+    const KEY = "tracker-expanded-pages";
+    const getExpanded = () => {
+        try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch (e) { return []; }
+    };
+    const setExpanded = (ids) => localStorage.setItem(KEY, JSON.stringify(ids));
+
+    document.querySelectorAll(".tree-toggle").forEach((btn) => {
+        const id = btn.dataset.page;
+        const childUl = document.querySelector('.tree-children[data-parent="' + id + '"]');
+        if (!childUl) return;
+        if (getExpanded().includes(id)) {
+            childUl.classList.remove("hidden");
+            btn.textContent = "▾";
+        }
+        btn.addEventListener("click", () => {
+            const nowHidden = childUl.classList.toggle("hidden");
+            btn.textContent = nowHidden ? "▸" : "▾";
+            let ids = getExpanded();
+            if (nowHidden) {
+                ids = ids.filter((x) => x !== id);
+            } else if (!ids.includes(id)) {
+                ids.push(id);
+            }
+            setExpanded(ids);
+        });
+    });
+})();
+</script>

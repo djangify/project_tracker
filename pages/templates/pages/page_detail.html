@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ page.title }} - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+
+    {% if page.is_archived %}
+    <div class="mb-4 flex items-center justify-between bg-yellow-100 text-yellow-800 rounded px-4 py-2 text-sm">
+        <span>This page is in the trash.</span>
+        <form method="post" action="{% url 'pages:restore' page.id %}">
+            {% csrf_token %}
+            <button type="submit" class="font-semibold hover:text-yellow-900">Restore</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Breadcrumbs -->
+    <nav class="text-sm text-gray-500 mb-4 flex flex-wrap items-center gap-1">
+        <a href="{% url 'core:home' %}" class="hover:text-gray-700">Home</a>
+        {% for ancestor in ancestors %}
+        <span>/</span>
+        <a href="{% url 'pages:detail' ancestor.id %}" class="hover:text-gray-700 truncate">
+            {% if ancestor.icon %}{{ ancestor.icon }} {% endif %}{{ ancestor.title }}
+        </a>
+        {% endfor %}
+        <span>/</span>
+        <span class="text-gray-700">{% if page.icon %}{{ page.icon }} {% endif %}{{ page.title }}</span>
+    </nav>
+
+    <!-- Title row -->
+    <div class="flex items-center gap-3 mb-2">
+        <input type="text" id="page-icon" value="{{ page.icon }}" maxlength="8"
+               placeholder="📄"
+               class="w-12 text-3xl text-center bg-transparent focus:outline-none" />
+        <input type="text" id="page-title" value="{{ page.title }}"
+               placeholder="Untitled"
+               class="flex-1 text-3xl font-bold text-gray-800 bg-transparent focus:outline-none" />
+    </div>
+
+    <!-- Save indicator + actions -->
+    <div class="flex items-center justify-between mb-6 text-sm text-gray-400">
+        <span id="save-status">Saved</span>
+        <div class="flex items-center gap-3">
+            <button type="button" id="favorite-btn"
+                    class="hover:text-indigo-600 {% if page.is_favorite %}text-indigo-600{% endif %}"
+                    data-favorite="{{ page.is_favorite|yesno:'true,false' }}">
+                {% if page.is_favorite %}★ Favorited{% else %}☆ Favorite{% endif %}
+            </button>
+            {% if not page.is_archived %}
+            <form method="post" action="{% url 'pages:archive' page.id %}"
+                  onsubmit="return confirm('Move this page to the trash?');">
+                {% csrf_token %}
+                <button type="submit" class="hover:text-red-600">Delete</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Editor -->
+    <div id="editorjs" class="bg-white rounded-lg shadow px-4 py-6 min-h-64"></div>
+
+    <!-- Child pages -->
+    <div class="mt-8">
+        <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Subpages</h2>
+        {% if child_pages %}
+        <ul class="divide-y border rounded-lg bg-white">
+            {% for child in child_pages %}
+            <li>
+                <a href="{% url 'pages:detail' child.id %}"
+                   class="block px-4 py-2 hover:bg-gray-50 text-gray-800">
+                    {% if child.icon %}{{ child.icon }} {% endif %}{{ child.title }}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-gray-400 text-sm">No subpages yet.</p>
+        {% endif %}
+        <form method="post" action="{% url 'pages:create' %}?parent={{ page.id }}" class="mt-3">
+            {% csrf_token %}
+            <button type="submit"
+                    class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                + New subpage
+            </button>
+        </form>
+    </div>
+</div>
+
+{{ page.content|json_script:"page-content" }}
+{% endblock %}
+
+{% block extra_js %}
+<!-- Editor.js + plugins (jsDelivr CDN, pinned to major versions) -->
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/header@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/list@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/code@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/delimiter@1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/table@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/inline-code@1"></script>
+<script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@1"></script>
+
+<script>
+(function () {
+    const contentUrl = "{% url 'pages:content' page.id %}";
+    const favoriteUrl = "{% url 'pages:favorite' page.id %}";
+    const statusEl = document.getElementById("save-status");
+    const titleEl = document.getElementById("page-title");
+    const iconEl = document.getElementById("page-icon");
+    const favoriteBtn = document.getElementById("favorite-btn");
+
+    function getCookie(name) {
+        const match = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
+        return match ? match.pop() : "";
+    }
+    const csrftoken = getCookie("csrftoken");
+
+    let savedData = JSON.parse(document.getElementById("page-content").textContent || "{}");
+    if (!savedData || !savedData.blocks) {
+        savedData = { blocks: [] };
+    }
+
+    const editor = new EditorJS({
+        holder: "editorjs",
+        data: savedData,
+        placeholder: "Start writing, or press Tab for blocks…",
+        tools: {
+            header: { class: Header, inlineToolbar: true },
+            list: { class: EditorjsList, inlineToolbar: true },
+            checklist: { class: Checklist, inlineToolbar: true },
+            quote: { class: Quote, inlineToolbar: true },
+            code: { class: CodeTool },
+            delimiter: { class: Delimiter },
+            table: { class: Table, inlineToolbar: true },
+            inlineCode: { class: InlineCode },
+            marker: { class: Marker },
+        },
+        onChange: scheduleSave,
+    });
+
+    let saveTimer = null;
+    function scheduleSave() {
+        statusEl.textContent = "Saving…";
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(save, 1500);
+    }
+
+    async function save() {
+        let content = savedData;
+        try {
+            content = await editor.save();
+        } catch (e) {
+            /* editor not ready yet — keep last known content */
+        }
+        try {
+            const resp = await fetch(contentUrl, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrftoken,
+                },
+                body: JSON.stringify({
+                    title: titleEl.value,
+                    icon: iconEl.value,
+                    content: content,
+                }),
+            });
+            if (!resp.ok) throw new Error("save failed");
+            statusEl.textContent = "Saved";
+        } catch (e) {
+            statusEl.textContent = "Save failed — retrying…";
+            clearTimeout(saveTimer);
+            saveTimer = setTimeout(save, 3000);
+        }
+    }
+
+    titleEl.addEventListener("input", scheduleSave);
+    iconEl.addEventListener("input", scheduleSave);
+
+    favoriteBtn.addEventListener("click", async function () {
+        const resp = await fetch(favoriteUrl, {
+            method: "POST",
+            headers: { "X-CSRFToken": csrftoken },
+        });
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (data.is_favorite) {
+            favoriteBtn.textContent = "★ Favorited";
+            favoriteBtn.classList.add("text-indigo-600");
+        } else {
+            favoriteBtn.textContent = "☆ Favorite";
+            favoriteBtn.classList.remove("text-indigo-600");
+        }
+    });
+})();
+</script>
+{% endblock %}

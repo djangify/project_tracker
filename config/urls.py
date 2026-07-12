@@ -21,6 +21,7 @@ urlpatterns = [
     path("", include("core.urls")),
     path("projects/", include("projects.urls")),
     path("crm/", include("crm.urls")),
+    path("pages/", include("pages.urls")),
     # login redirection
     path("accounts/login/", redirect_to_admin_login, name="login"),
     path(

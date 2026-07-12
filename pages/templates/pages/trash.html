@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Trash - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Trash</h1>
+
+    {% if pages %}
+    <ul class="divide-y border rounded-lg bg-white">
+        {% for page in pages %}
+        <li class="flex items-center justify-between px-4 py-3">
+            <div class="min-w-0">
+                <a href="{% url 'pages:detail' page.id %}" class="text-gray-800 hover:text-indigo-600 truncate">
+                    {% if page.icon %}{{ page.icon }} {% endif %}{{ page.title }}
+                </a>
+                <p class="text-xs text-gray-400">Archived {{ page.updated_at|date:"M d, Y" }}</p>
+            </div>
+            <div class="flex items-center gap-3 shrink-0">
+                <form method="post" action="{% url 'pages:restore' page.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="text-sm text-indigo-600 hover:text-indigo-800">Restore</button>
+                </form>
+                <form method="post" action="{% url 'pages:delete' page.id %}"
+                      onsubmit="return confirm('Permanently delete this page and all its subpages? This cannot be undone.');">
+                    {% csrf_token %}
+                    <button type="submit" class="text-sm text-red-600 hover:text-red-800">Delete forever</button>
+                </form>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-gray-500">Trash is empty.</p>
+    {% endif %}
+</div>
+{% endblock %}

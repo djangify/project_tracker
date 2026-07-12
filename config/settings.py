@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "projects",
     "crm",
     "core",
+    "pages",
 ]
 
 MIDDLEWARE = [
@@ -76,6 +77,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.site_config",
+                "pages.context_processors.sidebar",
             ],
         },
     },
