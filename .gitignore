@@ -19,7 +19,6 @@ env/
 db.sqlite3
 db.sqlite3-journal
 local_settings.py
-mtdify/settings/local.py
 *.log
 *.pot
 *.pyc
@@ -50,9 +49,6 @@ export.json
 
 # --- Node / Tailwind ---
 node_modules/
-package-lock.json
-package.json
-tailwind.config.js
 
 # --- OS / Misc ---
 .DS_Store

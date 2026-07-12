@@ -12,7 +12,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 ALLOWED_HOSTS = [
     "tracker.todiane.com",
-    "tracker.djangify.com",
     "127.0.0.1",
 ]
 
@@ -21,8 +20,6 @@ CSRF_TRUSTED_ORIGINS = [
     "https://tracker.todiane.com",
     "http://tracker.todiane.com",
     "http://127.0.0.1:8000",
-    "http://tracker.djangify.com",
-    "https://tracker.djangify.com",
 ]
 
 SECRET_KEY = env("SECRET_KEY", default="your-secret-key-here")
@@ -32,10 +29,6 @@ DEBUG = False
 # -----------------------------------------------------------------------------
 # Database (SQLite)
 # -----------------------------------------------------------------------------
-# Database - SQLite default for Docker. Use in production
-# DATABASES = {"default": env.db(default="sqlite:////app/db/db.sqlite3")}
-
-# Database - SQLite. Use in development
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -83,7 +76,6 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.site_config",
-                "js_asset.context_processors.importmap",
             ],
         },
     },
@@ -171,7 +163,7 @@ SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

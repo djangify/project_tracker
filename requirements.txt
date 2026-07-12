@@ -1,18 +1,11 @@
-
 asgiref
-beautifulsoup4
 certifi
 cffi
 charset-normalizer
 cryptography
 Django==6.0
-psycopg[binary]
 django-cors-headers
 django-environ
-django-js-asset==3.1.2
-django-storages
-django-tinymce
-django-widget-tweaks
 djangorestframework
 gunicorn
 idna
@@ -20,7 +13,6 @@ packaging
 pillow
 pycparser
 requests
-soupsieve
 sqlparse
 typing_extensions
 tzdata
