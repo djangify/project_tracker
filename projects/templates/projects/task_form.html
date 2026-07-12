@@ -35,12 +35,12 @@
                 </div>
                 
                 <div>
-                    <div class="flex items-center">
-                        <input type="checkbox" name="{{ form.is_completed.name }}" id="{{ form.is_completed.id_for_label }}" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
-                        <label for="{{ form.is_completed.id_for_label }}" class="ml-2 block text-sm text-gray-700">
-                            Mark as completed
-                        </label>
-                    </div>
+                    <label for="{{ form.scheduled_date.id_for_label }}" class="block text-sm font-medium text-gray-700">Scheduled date <span class="text-gray-400">(optional)</span></label>
+                    <input type="date" name="{{ form.scheduled_date.name }}" id="{{ form.scheduled_date.id_for_label }}" value="{{ form.scheduled_date.value|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <p class="text-xs text-gray-400 mt-1">The day you plan to do this task.</p>
+                    {% if form.scheduled_date.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.scheduled_date.errors|join:", " }}</p>
+                    {% endif %}
                 </div>
             </div>
             

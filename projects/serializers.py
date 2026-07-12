@@ -5,14 +5,18 @@ from .models import Project, Task, WorkSession
 class TaskSerializer(serializers.ModelSerializer):
     class Meta:
         model = Task
-        fields = ['id', 'title', 'description', 'is_completed', 'created_at', 'order']
+        fields = [
+            'id', 'title', 'description', 'status', 'scheduled_date',
+            'estimate_minutes', 'is_completed', 'created_at', 'order',
+        ]
+        read_only_fields = ['is_completed']
 
 class WorkSessionSerializer(serializers.ModelSerializer):
     duration_minutes = serializers.ReadOnlyField()
-    
+
     class Meta:
         model = WorkSession
-        fields = ['id', 'start_time', 'end_time', 'notes', 'duration_minutes']
+        fields = ['id', 'task', 'start_time', 'end_time', 'notes', 'duration_minutes']
 
 class ProjectSerializer(serializers.ModelSerializer):
     tasks = TaskSerializer(many=True, read_only=True)

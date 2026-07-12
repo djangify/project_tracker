@@ -50,7 +50,7 @@ class ProjectUpdateView(LoginRequiredMixin, UpdateView):
 
 class TaskCreateView(LoginRequiredMixin, CreateView):
     model = Task
-    fields = ['title', 'description', 'is_completed']
+    fields = ['title', 'description', 'scheduled_date']
     template_name = 'projects/task_form.html'
     
     def form_valid(self, form):
@@ -142,10 +142,10 @@ class WorkSessionDeleteView(LoginRequiredMixin, DeleteView):
     
 class TaskToggleCompletionView(LoginRequiredMixin, View):
     """
-    Toggle the completion status of a task
+    Toggle a task between done and planned (is_completed stays in sync via Task.save()).
     """
     def post(self, request, *args, **kwargs):
         task = get_object_or_404(Task, pk=kwargs['pk'])
-        task.is_completed = not task.is_completed
+        task.status = 'planned' if task.status == 'done' else 'done'
         task.save()
         return HttpResponseRedirect(reverse('projects:project_detail', kwargs={'pk': task.project.id}))
