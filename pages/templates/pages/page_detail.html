@@ -57,6 +57,28 @@
         </div>
     </div>
 
+    <!-- Linked to -->
+    <div class="flex flex-wrap items-center gap-4 mb-6 text-sm text-gray-500">
+        <label class="flex items-center gap-1">
+            <span>Project:</span>
+            <select id="page-project" class="bg-gray-50 border border-gray-200 rounded px-2 py-1">
+                <option value="">None</option>
+                {% for p in all_projects %}
+                <option value="{{ p.id }}" {% if page.project_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label class="flex items-center gap-1">
+            <span>Contact:</span>
+            <select id="page-contact" class="bg-gray-50 border border-gray-200 rounded px-2 py-1">
+                <option value="">None</option>
+                {% for c in all_contacts %}
+                <option value="{{ c.id }}" {% if page.contact_id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </label>
+    </div>
+
     <!-- Editor -->
     <div id="editorjs" class="bg-white rounded-lg shadow px-4 py-6 min-h-64"></div>
 
@@ -179,6 +201,21 @@
 
     titleEl.addEventListener("input", scheduleSave);
     iconEl.addEventListener("input", scheduleSave);
+
+    // Link this page to a project / contact (Phase E)
+    async function linkChange(key, value) {
+        statusEl.textContent = "Saving…";
+        const resp = await fetch(contentUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+            body: JSON.stringify({ [key]: value || null }),
+        });
+        statusEl.textContent = resp.ok ? "Saved" : "Save failed";
+    }
+    const projectSel = document.getElementById("page-project");
+    const contactSel = document.getElementById("page-contact");
+    if (projectSel) projectSel.addEventListener("change", (e) => linkChange("project", e.target.value));
+    if (contactSel) contactSel.addEventListener("change", (e) => linkChange("contact", e.target.value));
 
     favoriteBtn.addEventListener("click", async function () {
         const resp = await fetch(favoriteUrl, {

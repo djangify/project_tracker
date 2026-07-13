@@ -40,6 +40,14 @@ class Contact(models.Model):
     profile_url = models.URLField(blank=True, help_text="Link to their profile")
     email = models.EmailField(blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="new")
+    project = models.ForeignKey(
+        "projects.Project",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="contacts",
+        help_text="The business this contact relates to",
+    )
     tags = models.CharField(
         max_length=255, blank=True, help_text="Comma-separated, e.g. coach, warm lead"
     )
@@ -52,8 +60,10 @@ class Contact(models.Model):
     follow_up_2_done = models.BooleanField("Follow-up 2 done", default=False)
     follow_up_3_done = models.BooleanField("Follow-up 3 done", default=False)
 
-    joined_live_it_list = models.BooleanField(
-        default=False, help_text="Signed up for the free Live It List"
+    joined_email_list = models.BooleanField(
+        "Joined email list",
+        default=False,
+        help_text="Signed up for the email list",
     )
     made_purchase = models.BooleanField(
         default=False, help_text="This contact has bought something"

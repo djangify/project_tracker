@@ -5,6 +5,9 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
+from crm.models import Contact
+from projects.models import Project
+
 from .models import Page
 
 
@@ -98,3 +101,43 @@ class PageViewTests(TestCase):
         page = Page.objects.create(title="Doomed", is_archived=True)
         self.client.post(reverse("pages:delete", args=[page.id]))
         self.assertFalse(Page.objects.filter(pk=page.pk).exists())
+
+
+class PageLinkTests(TestCase):
+    """Phase E: pages linked to projects/contacts."""
+
+    def setUp(self):
+        self.user = User.objects.create_user("tester", password="pw")
+        self.client.login(username="tester", password="pw")
+        self.project = Project.objects.create(name="Djangify")
+        self.contact = Contact.objects.create(name="Sam")
+
+    def test_create_page_linked_to_project(self):
+        self.client.post(reverse("pages:create") + f"?project={self.project.id}")
+        page = Page.objects.get()
+        self.assertEqual(page.project, self.project)
+        self.assertEqual(list(self.project.pages.all()), [page])
+
+    def test_create_page_linked_to_contact(self):
+        self.client.post(reverse("pages:create") + f"?contact={self.contact.id}")
+        page = Page.objects.get()
+        self.assertEqual(page.contact, self.contact)
+
+    def test_autosave_links_and_unlinks_project(self):
+        page = Page.objects.create(title="Note")
+        # link
+        self.client.post(
+            reverse("pages:content", args=[page.id]),
+            data=json.dumps({"project": self.project.id}),
+            content_type="application/json",
+        )
+        page.refresh_from_db()
+        self.assertEqual(page.project, self.project)
+        # unlink
+        self.client.post(
+            reverse("pages:content", args=[page.id]),
+            data=json.dumps({"project": None}),
+            content_type="application/json",
+        )
+        page.refresh_from_db()
+        self.assertIsNone(page.project)

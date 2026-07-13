@@ -58,7 +58,7 @@ class ContactListView(LoginRequiredMixin, ListView):
             "messages_sent": messages_sent,
             "responses": responses,
             "response_rate": round(responses / messages_sent * 100) if messages_sent else 0,
-            "list_signups": Contact.objects.filter(joined_live_it_list=True).count(),
+            "list_signups": Contact.objects.filter(joined_email_list=True).count(),
             "sales": Contact.objects.filter(made_purchase=True).count(),
             "revenue": Contact.objects.filter(made_purchase=True).aggregate(
                 total=Sum("revenue")
@@ -96,9 +96,10 @@ CONTACT_FIELDS = [
     "profile_url",
     "email",
     "status",
+    "project",
     "tags",
     "follow_up_date",
-    "joined_live_it_list",
+    "joined_email_list",
     "made_purchase",
     "revenue",
     "notes",

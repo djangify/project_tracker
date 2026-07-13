@@ -64,6 +64,17 @@
                 </div>
 
                 <div>
+                    <label for="{{ form.project.id_for_label }}" class="block text-sm font-medium text-gray-700">Project / business</label>
+                    <select name="{{ form.project.name }}" id="{{ form.project.id_for_label }}" class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        <option value="">— None —</option>
+                        {% for project in form.fields.project.queryset %}
+                        <option value="{{ project.pk }}" {% if form.project.value|stringformat:'s' == project.pk|stringformat:'s' %}selected{% endif %}>{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Which business you spoke to them about.</p>
+                </div>
+
+                <div>
                     <label for="{{ form.tags.id_for_label }}" class="block text-sm font-medium text-gray-700">Tags</label>
                     <input type="text" name="{{ form.tags.name }}" id="{{ form.tags.id_for_label }}" value="{{ form.tags.value|default:'' }}" placeholder="coach, warm lead" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                     <p class="text-xs text-gray-500 mt-1">Comma-separated</p>
@@ -83,8 +94,8 @@
 
             <div class="border-t pt-4" style="display: flex; flex-direction: column; gap: 0.75rem;">
                 <div class="flex items-center">
-                    <input type="checkbox" name="{{ form.joined_live_it_list.name }}" id="{{ form.joined_live_it_list.id_for_label }}" {% if form.joined_live_it_list.value %}checked{% endif %} class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
-                    <label for="{{ form.joined_live_it_list.id_for_label }}" class="ml-2 text-sm text-gray-700">Joined the free Live It List</label>
+                    <input type="checkbox" name="{{ form.joined_email_list.name }}" id="{{ form.joined_email_list.id_for_label }}" {% if form.joined_email_list.value %}checked{% endif %} class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                    <label for="{{ form.joined_email_list.id_for_label }}" class="ml-2 text-sm text-gray-700">Joined email list</label>
                 </div>
                 <div class="flex items-center">
                     <input type="checkbox" name="{{ form.made_purchase.name }}" id="{{ form.made_purchase.id_for_label }}" {% if form.made_purchase.value %}checked{% endif %} class="h-4 w-4 text-green-600 border-gray-300 rounded">

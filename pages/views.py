@@ -9,6 +9,9 @@ from django.views import View
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import DetailView, ListView
 
+from crm.models import Contact
+from projects.models import Project
+
 from .models import Page
 
 
@@ -24,18 +27,29 @@ class PageDetailView(LoginRequiredMixin, DetailView):
         ctx = super().get_context_data(**kwargs)
         ctx["ancestors"] = self.object.ancestors()
         ctx["child_pages"] = self.object.visible_children()
+        ctx["all_projects"] = Project.objects.all()
+        ctx["all_contacts"] = Contact.objects.all()
         return ctx
 
 
 class PageCreateView(LoginRequiredMixin, View):
-    """Create a blank page (optionally under ?parent=<id>) and open it."""
+    """Create a blank page, optionally under ?parent= / linked to ?project= / ?contact=."""
 
     def post(self, request, *args, **kwargs):
-        parent = None
-        parent_id = request.GET.get("parent") or request.POST.get("parent")
+        def _param(key):
+            return request.GET.get(key) or request.POST.get(key)
+
+        page = Page()
+        parent_id = _param("parent")
         if parent_id:
-            parent = get_object_or_404(Page, pk=parent_id)
-        page = Page.objects.create(parent=parent)
+            page.parent = get_object_or_404(Page, pk=parent_id)
+        project_id = _param("project")
+        if project_id:
+            page.project = get_object_or_404(Project, pk=project_id)
+        contact_id = _param("contact")
+        if contact_id:
+            page.contact = get_object_or_404(Contact, pk=contact_id)
+        page.save()
         return redirect(page.get_absolute_url())
 
 
@@ -56,6 +70,18 @@ class PageContentUpdateView(LoginRequiredMixin, View):
             page.icon = (data["icon"] or "")[:8]
         if "content" in data:
             page.content = data["content"]
+        if "project" in data:
+            page.project = (
+                Project.objects.filter(pk=data["project"]).first()
+                if data["project"]
+                else None
+            )
+        if "contact" in data:
+            page.contact = (
+                Contact.objects.filter(pk=data["contact"]).first()
+                if data["contact"]
+                else None
+            )
         page.save()
         return JsonResponse(
             {"updated_at": page.updated_at.isoformat(), "title": page.title}

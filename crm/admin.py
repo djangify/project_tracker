@@ -17,10 +17,11 @@ class ContactAdmin(admin.ModelAdmin):
         "platform",
         "social_handle",
         "status",
+        "project",
         "follow_up_1_done",
         "follow_up_2_done",
         "follow_up_3_done",
-        "joined_live_it_list",
+        "joined_email_list",
         "made_purchase",
         "revenue",
         "follow_up_date",
@@ -28,13 +29,15 @@ class ContactAdmin(admin.ModelAdmin):
     list_filter = (
         "platform",
         "status",
-        "joined_live_it_list",
+        "project",
+        "joined_email_list",
         "made_purchase",
         "follow_up_1_done",
         "follow_up_2_done",
         "follow_up_3_done",
     )
-    list_editable = ("joined_live_it_list", "made_purchase")
+    list_editable = ("joined_email_list", "made_purchase")
+    list_select_related = ("project",)
     search_fields = ("name", "social_handle", "email", "tags", "notes")
     date_hierarchy = "created_at"
     inlines = [InteractionInline]

@@ -30,8 +30,11 @@
                             {{ contact.get_status_display }}
                         </span>
                         <span class="text-sm text-gray-600">{{ contact.get_platform_display }}</span>
-                        {% if contact.joined_live_it_list %}
-                        <span class="px-3 py-1 text-sm rounded-full bg-indigo-100 text-indigo-800">On Live It List</span>
+                        {% if contact.project %}
+                        <a href="{% url 'projects:project_detail' contact.project.id %}" class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800 hover:bg-gray-200">📁 {{ contact.project.name }}</a>
+                        {% endif %}
+                        {% if contact.joined_email_list %}
+                        <span class="px-3 py-1 text-sm rounded-full bg-indigo-100 text-indigo-800">On email list</span>
                         {% endif %}
                         {% if contact.made_purchase %}
                         <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Customer{% if contact.revenue %} · &pound;{{ contact.revenue }}{% endif %}</span>
@@ -124,6 +127,36 @@
                 <p class="text-gray-900 whitespace-pre-line">{{ contact.notes }}</p>
             </div>
             {% endif %}
+        </div>
+
+        <!-- Notes Section (linked pages) -->
+        <div class="p-6 border-b">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Notes</h2>
+                <form method="post" action="{% url 'pages:create' %}?contact={{ contact.id }}">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-1 px-3 rounded">New page</button>
+                </form>
+            </div>
+            {% with notes=contact.pages.all %}
+            {% if notes %}
+            <ul class="divide-y">
+                {% for page in notes %}
+                {% if not page.is_archived %}
+                <li>
+                    <a href="{% url 'pages:detail' page.id %}" class="block py-2 text-gray-800 hover:text-indigo-700">
+                        {% if page.icon %}{{ page.icon }} {% endif %}{{ page.title }}
+                    </a>
+                </li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="text-center py-6 bg-gray-50 rounded">
+                <p class="text-gray-500 text-sm">No notes yet. Click "New page" to start one for this contact.</p>
+            </div>
+            {% endif %}
+            {% endwith %}
         </div>
 
         <!-- Interaction history -->

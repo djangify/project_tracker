@@ -122,6 +122,61 @@
             </div>
             {% endif %}
         </div>
+        <!-- People Section (CRM contacts linked to this project) -->
+        <div class="p-6 border-b">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">People I've spoken to</h2>
+                <a href="{% url 'crm:contact_list' %}" class="text-sm text-indigo-600 hover:text-indigo-800">CRM →</a>
+            </div>
+            {% if project.contacts.exists %}
+            <div class="divide-y">
+                {% for contact in project.contacts.all %}
+                <div class="py-2 flex items-center justify-between">
+                    <div class="min-w-0">
+                        <a href="{% url 'crm:contact_detail' contact.id %}" class="font-medium text-gray-800 hover:text-indigo-700">{{ contact.name }}</a>
+                        <span class="text-xs text-gray-500 ml-2">{{ contact.get_platform_display }}</span>
+                    </div>
+                    <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700 shrink-0">{{ contact.get_status_display }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-6 bg-gray-50 rounded">
+                <p class="text-gray-500 text-sm">No contacts linked yet. Set a contact's project in the CRM to see them here.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Notes Section (linked pages) -->
+        <div class="p-6 border-b">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">Notes</h2>
+                <form method="post" action="{% url 'pages:create' %}?project={{ project.id }}">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-1 px-3 rounded">New page</button>
+                </form>
+            </div>
+            {% with notes=project.pages.all %}
+            {% if notes %}
+            <ul class="divide-y">
+                {% for page in notes %}
+                {% if not page.is_archived %}
+                <li>
+                    <a href="{% url 'pages:detail' page.id %}" class="block py-2 text-gray-800 hover:text-indigo-700">
+                        {% if page.icon %}{{ page.icon }} {% endif %}{{ page.title }}
+                    </a>
+                </li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+            {% else %}
+            <div class="text-center py-6 bg-gray-50 rounded">
+                <p class="text-gray-500 text-sm">No notes yet. Click "New page" to start one for this project.</p>
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+
         <!-- Work Sessions Section -->
         <div class="p-6">
             <div class="flex justify-between items-center mb-4">
