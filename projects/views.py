@@ -1,12 +1,18 @@
 # projects/views.py
+import calendar
+import json
+from collections import defaultdict
+from datetime import date, timedelta
+
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, RedirectView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.urls import reverse_lazy, reverse
 from django.utils import timezone
+from django.db.models import F
 from rest_framework import viewsets
 from django import forms
-from django.views.generic import DeleteView
+from django.views.generic import DeleteView, TemplateView
 from django.views.generic import View
 from django.http import HttpResponseRedirect, JsonResponse
 
@@ -158,3 +164,174 @@ class TaskToggleJSONView(LoginRequiredMixin, View):
         task.status = 'planned' if task.status == 'done' else 'done'
         task.save()
         return JsonResponse({'status': task.status, 'is_completed': task.is_completed})
+
+
+class TaskSetStatusView(LoginRequiredMixin, View):
+    """Set a task to an explicit status (for the board). Accepts JSON or form 'status'."""
+    def post(self, request, *args, **kwargs):
+        task = get_object_or_404(Task, pk=kwargs['pk'])
+        status = request.POST.get('status')
+        if status is None:
+            try:
+                status = json.loads(request.body or '{}').get('status')
+            except json.JSONDecodeError:
+                status = None
+        if status in dict(Task.STATUS_CHOICES):
+            task.status = status
+            task.save()
+            return JsonResponse({'status': task.status, 'is_completed': task.is_completed})
+        return JsonResponse({'error': 'invalid status'}, status=400)
+
+
+# ---------------------------------------------------------------------------
+# Task views: Table / Board / Calendar (Phase C) — all filter by ?project=<id>
+# ---------------------------------------------------------------------------
+class _TaskViewMixin(LoginRequiredMixin):
+    def get_current_project(self):
+        pid = self.request.GET.get('project')
+        if pid and pid.isdigit():
+            return Project.objects.filter(pk=pid).first()
+        return None
+
+    def get_tasks(self):
+        qs = Task.objects.select_related('project')
+        project = self.get_current_project()
+        if project:
+            qs = qs.filter(project=project)
+        return qs
+
+    def base_context(self, view_name):
+        project = self.get_current_project()
+        return {
+            'projects': Project.objects.all().order_by('name'),
+            'current_project': project,
+            'current_project_id': str(project.id) if project else '',
+            'view': view_name,
+        }
+
+
+class TaskTableView(_TaskViewMixin, TemplateView):
+    template_name = 'projects/tasks/table.html'
+
+    SORTABLE = {
+        'project': 'project__name',
+        'title': 'title',
+        'status': 'status',
+        'scheduled_date': 'scheduled_date',
+        'estimate': 'estimate_minutes',
+    }
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(self.base_context('table'))
+
+        sort = self.request.GET.get('sort', 'scheduled_date')
+        desc = sort.startswith('-')
+        key = sort[1:] if desc else sort
+        field = self.SORTABLE.get(key, 'scheduled_date')
+
+        tasks = self.get_tasks()
+        if field == 'scheduled_date':
+            expr = F('scheduled_date')
+            expr = expr.desc(nulls_last=True) if desc else expr.asc(nulls_last=True)
+            tasks = tasks.order_by(expr, 'project__name', 'order')
+        else:
+            tasks = tasks.order_by(('-' if desc else '') + field, 'project__name', 'order')
+
+        # Column headers with next-sort links + direction arrows
+        columns = []
+        for label, ckey in [
+            ('Project', 'project'), ('Task', 'title'), ('Status', 'status'),
+            ('Scheduled', 'scheduled_date'), ('Estimate', 'estimate'),
+        ]:
+            if sort == ckey:
+                nxt, arrow = '-' + ckey, '▲'
+            elif sort == '-' + ckey:
+                nxt, arrow = ckey, '▼'
+            else:
+                nxt, arrow = ckey, ''
+            columns.append({'label': label, 'next': nxt, 'arrow': arrow})
+
+        ctx['tasks'] = tasks
+        ctx['columns'] = columns
+        return ctx
+
+
+class TaskBoardView(_TaskViewMixin, TemplateView):
+    template_name = 'projects/tasks/board.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(self.base_context('board'))
+        tasks = list(self.get_tasks().order_by('scheduled_date', 'order'))
+        ctx['columns'] = [
+            {'key': key, 'label': label,
+             'tasks': [t for t in tasks if t.status == key]}
+            for key, label in Task.STATUS_CHOICES
+        ]
+        ctx['status_choices'] = Task.STATUS_CHOICES
+        return ctx
+
+
+class TaskCalendarView(_TaskViewMixin, TemplateView):
+    template_name = 'projects/tasks/calendar.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.update(self.base_context('calendar'))
+        today = timezone.localdate()
+
+        try:
+            year, month = map(int, self.request.GET.get('month', '').split('-'))
+            first = date(year, month, 1)
+        except (ValueError, AttributeError):
+            first = today.replace(day=1)
+
+        last_day = calendar.monthrange(first.year, first.month)[1]
+        month_end = first.replace(day=last_day)
+
+        by_day = defaultdict(list)
+        for t in self.get_tasks().filter(scheduled_date__range=(first, month_end)):
+            by_day[t.scheduled_date].append(t)
+
+        cal = calendar.Calendar(firstweekday=0)  # Monday
+        weeks = []
+        for week in cal.monthdatescalendar(first.year, first.month):
+            days = []
+            for d in week:
+                day_tasks = by_day.get(d, [])
+                project_ids = {t.project_id for t in day_tasks}
+                days.append({
+                    'date': d,
+                    'in_month': d.month == first.month,
+                    'is_today': d == today,
+                    'tasks': day_tasks,
+                    'clash': len(project_ids) >= 2,
+                })
+            weeks.append(days)
+
+        ctx['weeks'] = weeks
+        ctx['month_label'] = first.strftime('%B %Y')
+        ctx['prev_month'] = (first - timedelta(days=1)).replace(day=1).strftime('%Y-%m')
+        ctx['next_month'] = (month_end + timedelta(days=1)).strftime('%Y-%m')
+        return ctx
+
+
+class TaskQuickCreateView(LoginRequiredMixin, CreateView):
+    """General task create (used by the calendar '+' and toolbar 'New task')."""
+    model = Task
+    fields = ['project', 'title', 'scheduled_date', 'status', 'estimate_minutes']
+    template_name = 'projects/tasks/task_quick_form.html'
+
+    def get_initial(self):
+        initial = super().get_initial()
+        d = self.request.GET.get('date')
+        if d:
+            initial['scheduled_date'] = d
+        pid = self.request.GET.get('project')
+        if pid and pid.isdigit():
+            initial['project'] = pid
+        return initial
+
+    def get_success_url(self):
+        return reverse('projects:task_table')

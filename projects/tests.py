@@ -1,5 +1,6 @@
 # projects/tests.py
 import datetime
+import json
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -89,3 +90,73 @@ class TaskViewTests(TestCase):
         task = Task.objects.get(title="Dated task")
         self.assertEqual(task.scheduled_date, datetime.date(2026, 7, 20))
         self.assertEqual(task.status, "planned")
+
+
+class TaskViewsTests(TestCase):
+    """Phase C: Table / Board / Calendar + set-status + quick create."""
+
+    def setUp(self):
+        self.user = User.objects.create_user("tester", password="pw")
+        self.client.login(username="tester", password="pw")
+        self.p1 = Project.objects.create(name="Djangify")
+        self.p2 = Project.objects.create(name="Inspirational Guidance")
+
+    def test_table_renders_and_filters_by_project(self):
+        Task.objects.create(project=self.p1, title="Djangify task")
+        Task.objects.create(project=self.p2, title="IG task")
+        resp = self.client.get(reverse("projects:task_table"))
+        self.assertContains(resp, "Djangify task")
+        self.assertContains(resp, "IG task")
+        # filtered
+        resp = self.client.get(reverse("projects:task_table") + f"?project={self.p1.id}")
+        self.assertContains(resp, "Djangify task")
+        self.assertNotContains(resp, "IG task")
+
+    def test_board_groups_by_status(self):
+        Task.objects.create(project=self.p1, title="Planned one", status="planned")
+        Task.objects.create(project=self.p1, title="Doing one", status="in_progress")
+        Task.objects.create(project=self.p1, title="Done one", status="done")
+        resp = self.client.get(reverse("projects:task_board"))
+        cols = {c["key"]: c for c in resp.context["columns"]}
+        self.assertEqual([t.title for t in cols["planned"]["tasks"]], ["Planned one"])
+        self.assertEqual([t.title for t in cols["in_progress"]["tasks"]], ["Doing one"])
+        self.assertEqual([t.title for t in cols["done"]["tasks"]], ["Done one"])
+
+    def test_set_status_endpoint(self):
+        task = Task.objects.create(project=self.p1, title="Move me")
+        resp = self.client.post(
+            reverse("projects:task_set_status", args=[task.id]),
+            data=json.dumps({"status": "in_progress"}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        task.refresh_from_db()
+        self.assertEqual(task.status, "in_progress")
+
+    def test_set_status_rejects_invalid(self):
+        task = Task.objects.create(project=self.p1, title="X")
+        resp = self.client.post(
+            reverse("projects:task_set_status", args=[task.id]),
+            data=json.dumps({"status": "bogus"}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 400)
+        task.refresh_from_db()
+        self.assertEqual(task.status, "planned")
+
+    def test_calendar_renders(self):
+        today = timezone.localdate()
+        Task.objects.create(project=self.p1, title="Cal task", scheduled_date=today)
+        resp = self.client.get(reverse("projects:task_calendar"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Cal task")
+
+    def test_quick_create(self):
+        self.client.post(
+            reverse("projects:task_quick_create"),
+            {"project": self.p1.id, "title": "Quick", "status": "planned",
+             "scheduled_date": "2026-07-20", "estimate_minutes": "30"},
+        )
+        task = Task.objects.get(title="Quick")
+        self.assertEqual(task.project, self.p1)
+        self.assertEqual(task.estimate_minutes, 30)

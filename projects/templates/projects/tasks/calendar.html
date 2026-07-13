@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Task calendar - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Tasks</h1>
+    {% include "projects/tasks/_toolbar.html" %}
+
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-800">{{ month_label }}</h2>
+        <div class="flex gap-2 text-sm">
+            <a href="?month={{ prev_month }}{% if current_project_id %}&project={{ current_project_id }}{% endif %}"
+               class="px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">← Prev</a>
+            <a href="?{% if current_project_id %}project={{ current_project_id }}{% endif %}"
+               class="px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">Today</a>
+            <a href="?month={{ next_month }}{% if current_project_id %}&project={{ current_project_id }}{% endif %}"
+               class="px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50">Next →</a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="grid grid-cols-7 bg-gray-50 border-b text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <div class="px-2 py-2 text-center">Mon</div>
+            <div class="px-2 py-2 text-center">Tue</div>
+            <div class="px-2 py-2 text-center">Wed</div>
+            <div class="px-2 py-2 text-center">Thu</div>
+            <div class="px-2 py-2 text-center">Fri</div>
+            <div class="px-2 py-2 text-center">Sat</div>
+            <div class="px-2 py-2 text-center">Sun</div>
+        </div>
+        {% for week in weeks %}
+        <div class="grid grid-cols-7">
+            {% for day in week %}
+            <div class="group min-h-24 border-b border-r border-gray-100 p-1.5 {% if not day.in_month %}bg-gray-50{% endif %} {% if day.is_today %}bg-indigo-50{% endif %}">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs {% if day.is_today %}font-bold text-indigo-700{% elif day.in_month %}text-gray-700{% else %}text-gray-300{% endif %}">{{ day.date|date:"j" }}</span>
+                    <div class="flex items-center gap-1">
+                        {% if day.clash %}<span class="text-xs text-red-600" title="More than one business scheduled">⚠</span>{% endif %}
+                        <a href="{% url 'projects:task_quick_create' %}?date={{ day.date|date:'Y-m-d' }}{% if current_project_id %}&project={{ current_project_id }}{% endif %}"
+                           class="hidden group-hover:inline text-gray-400 hover:text-indigo-600 text-sm leading-none" title="Add task">+</a>
+                    </div>
+                </div>
+                <div class="mt-1 space-y-0.5">
+                    {% for task in day.tasks %}
+                    <div class="text-xs truncate px-1 py-0.5 rounded {% if task.status == 'done' %}bg-green-100 text-green-800 line-through{% elif task.status == 'in_progress' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100 text-gray-700{% endif %}"
+                         title="{{ task.title }} · {{ task.project.name }}">{{ task.title }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

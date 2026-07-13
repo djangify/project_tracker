@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% block title %}Tasks - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Tasks</h1>
+    {% include "projects/tasks/_toolbar.html" %}
+
+    <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    {% for col in columns %}
+                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        <a href="?sort={{ col.next }}{% if current_project_id %}&project={{ current_project_id }}{% endif %}" class="hover:text-gray-800">
+                            {{ col.label }} <span class="text-gray-400">{{ col.arrow }}</span>
+                        </a>
+                    </th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for task in tasks %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        <a href="{% url 'projects:project_detail' task.project.id %}" class="text-gray-600 hover:text-indigo-700">{{ task.project.name }}</a>
+                    </td>
+                    <td class="px-4 py-2 text-gray-900">{{ task.title }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        {% include "projects/tasks/_status_badge.html" with status=task.status %}
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap {% if task.is_overdue %}text-red-600 font-medium{% else %}text-gray-600{% endif %}">
+                        {% if task.scheduled_date %}{{ task.scheduled_date|date:"M d, Y" }}{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-gray-600">
+                        {% if task.estimate_minutes %}{{ task.estimate_minutes }}m{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">No tasks{% if current_project %} for {{ current_project.name }}{% endif %}.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

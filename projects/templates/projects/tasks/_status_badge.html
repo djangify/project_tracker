@@ -1,0 +1,7 @@
+{% comment %}Status pill. Expects `status` (planned|in_progress|done).{% endcomment %}
+<span class="px-2 py-0.5 text-xs rounded-full
+    {% if status == 'planned' %}bg-gray-100 text-gray-700
+    {% elif status == 'in_progress' %}bg-yellow-100 text-yellow-800
+    {% elif status == 'done' %}bg-green-100 text-green-800{% endif %}">
+    {% if status == 'planned' %}Planned{% elif status == 'in_progress' %}In progress{% elif status == 'done' %}Done{% endif %}
+</span>

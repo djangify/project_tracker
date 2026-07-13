@@ -14,6 +14,13 @@ urlpatterns = [
     # Frontend URLs
     path('', views.ProjectListView.as_view(), name='project_list'),
     path('create/', views.ProjectCreateView.as_view(), name='project_create'),
+
+    # Task views (Table / Board / Calendar)
+    path('tasks/', views.TaskTableView.as_view(), name='task_table'),
+    path('tasks/board/', views.TaskBoardView.as_view(), name='task_board'),
+    path('tasks/calendar/', views.TaskCalendarView.as_view(), name='task_calendar'),
+    path('tasks/new/', views.TaskQuickCreateView.as_view(), name='task_quick_create'),
+    path('task/<int:pk>/set-status/', views.TaskSetStatusView.as_view(), name='task_set_status'),
     path('project/<int:pk>/', views.ProjectDetailView.as_view(), name='project_detail'),
     path('project/<int:pk>/edit/', views.ProjectUpdateView.as_view(), name='project_edit'),
     path('project/<int:pk>/start-session/', views.StartSessionView.as_view(), name='start_session'),

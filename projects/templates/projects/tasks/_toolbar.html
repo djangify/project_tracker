@@ -1,0 +1,38 @@
+{% comment %}Shared toolbar for the task views. Expects: view, projects, current_project_id.{% endcomment %}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div class="inline-flex rounded-lg bg-gray-100 p-1 text-sm">
+        {% with q=current_project_id %}
+        <a href="{% url 'projects:task_table' %}{% if q %}?project={{ q }}{% endif %}"
+           class="px-3 py-1 rounded-md {% if view == 'table' %}bg-white shadow text-gray-900{% else %}text-gray-600 hover:text-gray-900{% endif %}">Table</a>
+        <a href="{% url 'projects:task_board' %}{% if q %}?project={{ q }}{% endif %}"
+           class="px-3 py-1 rounded-md {% if view == 'board' %}bg-white shadow text-gray-900{% else %}text-gray-600 hover:text-gray-900{% endif %}">Board</a>
+        <a href="{% url 'projects:task_calendar' %}{% if q %}?project={{ q }}{% endif %}"
+           class="px-3 py-1 rounded-md {% if view == 'calendar' %}bg-white shadow text-gray-900{% else %}text-gray-600 hover:text-gray-900{% endif %}">Calendar</a>
+        {% endwith %}
+    </div>
+
+    <div class="flex items-center gap-2">
+        <select id="project-filter" class="bg-white border border-gray-300 rounded-md py-1.5 px-3 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="">All projects</option>
+            {% for p in projects %}
+            <option value="{{ p.id }}" {% if current_project_id == p.id|stringformat:'s' %}selected{% endif %}>{{ p.name }}</option>
+            {% endfor %}
+        </select>
+        <a href="{% url 'projects:task_quick_create' %}{% if current_project_id %}?project={{ current_project_id }}{% endif %}"
+           class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-1.5 px-3 rounded-md">+ New task</a>
+    </div>
+</div>
+
+<script>
+(function () {
+    const sel = document.getElementById("project-filter");
+    if (sel) {
+        sel.addEventListener("change", function () {
+            const url = new URL(window.location.href);
+            if (this.value) { url.searchParams.set("project", this.value); }
+            else { url.searchParams.delete("project"); }
+            window.location.href = url.toString();
+        });
+    }
+})();
+</script>

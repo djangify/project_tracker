@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% block title %}New task - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-lg">
+    <div class="mb-6">
+        <a href="{% url 'projects:task_table' %}" class="text-indigo-600 hover:text-indigo-800 text-sm">← Back to tasks</a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">New task</h1>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}<div class="text-red-500 text-sm">{{ form.non_field_errors }}</div>{% endif %}
+
+            <div>
+                <label for="{{ form.project.id_for_label }}" class="block text-sm font-medium text-gray-700">Project / business</label>
+                <select name="{{ form.project.name }}" id="{{ form.project.id_for_label }}" required
+                        class="mt-1 block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    {% for project in form.fields.project.queryset %}
+                    <option value="{{ project.pk }}" {% if form.project.value|stringformat:'s' == project.pk|stringformat:'s' %}selected{% endif %}>{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+                {% if form.project.errors %}<p class="text-red-500 text-xs mt-1">{{ form.project.errors|join:", " }}</p>{% endif %}
+            </div>
+
+            <div>
+                <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700">Task</label>
+                <input type="text" name="{{ form.title.name }}" id="{{ form.title.id_for_label }}" value="{{ form.title.value|default:'' }}" required
+                       class="mt-1 block w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                {% if form.title.errors %}<p class="text-red-500 text-xs mt-1">{{ form.title.errors|join:", " }}</p>{% endif %}
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label for="{{ form.scheduled_date.id_for_label }}" class="block text-sm font-medium text-gray-700">Scheduled</label>
+                    <input type="date" name="{{ form.scheduled_date.name }}" id="{{ form.scheduled_date.id_for_label }}" value="{{ form.scheduled_date.value|date:'Y-m-d'|default:'' }}"
+                           class="mt-1 block w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="{{ form.status.id_for_label }}" class="block text-sm font-medium text-gray-700">Status</label>
+                    <select name="{{ form.status.name }}" id="{{ form.status.id_for_label }}"
+                            class="mt-1 block w-full bg-white border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        {% for value, label in form.fields.status.choices %}
+                        <option value="{{ value }}" {% if form.status.value == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label for="{{ form.estimate_minutes.id_for_label }}" class="block text-sm font-medium text-gray-700">Estimate (min)</label>
+                    <input type="number" min="0" name="{{ form.estimate_minutes.name }}" id="{{ form.estimate_minutes.id_for_label }}" value="{{ form.estimate_minutes.value|default:'' }}"
+                           class="mt-1 block w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <a href="{% url 'projects:task_table' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded mr-2">Cancel</a>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Add task</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
