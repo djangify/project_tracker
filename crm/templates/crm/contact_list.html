@@ -39,7 +39,7 @@
         </div>
         <div class="bg-white shadow rounded-lg p-4">
             <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">Revenue</p>
-            <p class="text-3xl font-bold text-green-600 mt-1">&pound;{{ stats.revenue }}</p>
+            <p class="text-3xl font-bold text-green-600 mt-1">&pound;{{ stats.revenue|floatformat:2 }}</p>
         </div>
     </div>
 

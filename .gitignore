@@ -44,7 +44,6 @@ lib64/
 # --- Static and media ---
 media/
 staticfiles/
-static/
 export.json
 
 # --- Node / Tailwind ---

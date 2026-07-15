@@ -10,20 +10,22 @@ environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent, ".env"
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-ALLOWED_HOSTS = [
-    "tracker.todiane.com",
-    "127.0.0.1",
-]
+ALLOWED_HOSTS = env.list(
+    "ALLOWED_HOSTS", default=["tracker.todiane.com", "127.0.0.1"]
+)
 
 # CSRF_TRUSTED_ORIGINS
-CSRF_TRUSTED_ORIGINS = [
-    "https://tracker.todiane.com",
-    "http://tracker.todiane.com",
-    "http://127.0.0.1:8000",
-]
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        "https://tracker.todiane.com",
+        "http://tracker.todiane.com",
+        "http://127.0.0.1:8000",
+    ],
+)
 
 SECRET_KEY = env("SECRET_KEY", default="your-secret-key-here")
-DEBUG = False
+DEBUG = env.bool("DEBUG", default=False)
 
 
 # -----------------------------------------------------------------------------
@@ -157,16 +159,20 @@ REST_FRAMEWORK = {
 }
 
 # Security settings
-CSRF_COOKIE_SECURE = True
+# HSTS and secure-cookie flags only make sense behind HTTPS, so they're off
+# when DEBUG=True (local dev over plain http) and on in production.
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
-SECURE_HSTS_SECONDS = 31536000  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
+
+if not DEBUG:
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 USE_X_FORWARDED_HOST = True

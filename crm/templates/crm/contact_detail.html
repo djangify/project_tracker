@@ -37,7 +37,7 @@
                         <span class="px-3 py-1 text-sm rounded-full bg-indigo-100 text-indigo-800">On email list</span>
                         {% endif %}
                         {% if contact.made_purchase %}
-                        <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Customer{% if contact.revenue %} · &pound;{{ contact.revenue }}{% endif %}</span>
+                        <span class="px-3 py-1 text-sm rounded-full bg-green-100 text-green-800">Customer{% if contact.revenue %} · &pound;{{ contact.revenue|floatformat:2 }}{% endif %}</span>
                         {% endif %}
                     </div>
                 </div>
