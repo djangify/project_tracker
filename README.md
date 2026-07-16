@@ -1,3 +1,5 @@
+![page tracker header](https://github.com/djangify/project_tracker/blob/128cce0011da695400436adba5060c5f5c32e8c7/todiane-project tracker.png)
+
 # Tracker
 
 A self-hosted workspace for running multiple small businesses at once: a
@@ -22,8 +24,6 @@ stays in your own SQLite file.
 - **Pages** — nestable, Notion-style notes with an Editor.js block editor,
   favorites, and soft-delete trash. Pages can link to a project or a contact.
 
-See [`NOTION_UPGRADE_PLAN.md`](NOTION_UPGRADE_PLAN.md) if present in your
-checkout for the full design rationale (it's not tracked in this public repo).
 
 ## Stack
 

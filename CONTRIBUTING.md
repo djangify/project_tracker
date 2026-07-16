@@ -4,7 +4,7 @@ Thanks for taking a look at this project. It's a single-user tool built for
 a specific workflow (running a couple of small businesses solo), so the
 scope is intentionally narrow — see the "Scope" section in the
 [README](README.md) for what's explicitly out of bounds (multi-user,
-real-time collaboration, Notion import, etc.). PRs in that direction are
+real-time collaboration, third-party import tooling, etc.). PRs in that direction are
 likely to be declined, so it's worth opening an issue to discuss first if
 you're planning something bigger than a small fix.
 

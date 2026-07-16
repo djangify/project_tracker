@@ -5,9 +5,8 @@ from django.urls import reverse
 
 class Page(models.Model):
     """
-    A Notion-style page. Pages nest infinitely via a self-referential parent
-    and store their body as one Editor.js JSON document (see NOTION_UPGRADE_PLAN.md
-    Phase 1 for the design rationale).
+    A nestable page. Pages nest infinitely via a self-referential parent
+    and store their body as one Editor.js JSON document.
     """
 
     title = models.CharField(max_length=255, default="Untitled")
