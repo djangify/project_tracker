@@ -5,6 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect
 from django.views.static import serve
+from django.views.generic import TemplateView
 
 # Customize admin site
 admin.site.site_header = "Project Tracker"
@@ -30,5 +31,17 @@ urlpatterns = [
         {
             "document_root": settings.MEDIA_ROOT,
         },
+    ),
+    # PWA: served at the site root (not under /static/) so the service
+    # worker's scope covers the whole app.
+    path(
+        "manifest.json",
+        TemplateView.as_view(template_name="manifest.json", content_type="application/manifest+json"),
+        name="pwa_manifest",
+    ),
+    path(
+        "sw.js",
+        TemplateView.as_view(template_name="sw.js", content_type="application/javascript"),
+        name="pwa_service_worker",
     ),
 ]

@@ -58,6 +58,7 @@ class Task(models.Model):
         max_length=10,
         choices=RECURRENCE_CHOICES,
         default="none",
+        blank=True,
         help_text="A habit that repeats. Completion is tracked per day/week/month instead of once.",
     )
     created_at = models.DateTimeField(auto_now_add=True)

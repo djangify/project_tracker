@@ -27,7 +27,16 @@
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="{% if site_config.favicon %}{{ site_config.favicon.url }}{% else %}{% block favicon %}/static/images/favicon.ico{% endblock %}{% endif %}">
-    
+
+    <!-- PWA: installable "Add to Home Screen" -->
+    <link rel="manifest" href="{% url 'pwa_manifest' %}">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tracker">
+    <link rel="apple-touch-icon" href="{% static 'images/apple-touch-icon.png' %}">
+
     <!-- stylesheet -->
     <link href="{% static 'css/output.css' %}" rel="stylesheet">
     {% block extra_css %}{% endblock %}
@@ -135,5 +144,14 @@
     </div>
 
     {% block extra_js %}{% endblock %}
+
+    <!-- PWA: register the service worker (installability only, no offline caching) -->
+    <script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+            navigator.serviceWorker.register("{% url 'pwa_service_worker' %}");
+        });
+    }
+    </script>
 </body>
 </html>
