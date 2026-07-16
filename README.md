@@ -1,4 +1,4 @@
-![page tracker header](https://github.com/djangify/project_tracker/blob/1171769b2287a7a74253ed38d8e9434b2071a130/todiane-project-tracker-image.png)
+![Project Tracker](todiane-project-tracker-image.png)
 # Tracker
 
 A self-hosted workspace for running multiple small businesses at once: a
