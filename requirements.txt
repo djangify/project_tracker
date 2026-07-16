@@ -4,7 +4,7 @@ certifi
 cffi
 charset-normalizer
 cryptography
-Django==6.0
+Django==5.2.9
 django-cors-headers
 django-environ
 djangorestframework

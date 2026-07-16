@@ -27,7 +27,7 @@ checkout for the full design rationale (it's not tracked in this public repo).
 
 ## Stack
 
-- Django 6, Django REST Framework
+- Django 5.2.9, Django REST Framework
 - SQLite
 - Tailwind CSS v4 (`@tailwindcss/cli`, no Node build framework)
 - Gunicorn + WhiteNoise for production; Caddy (or any reverse proxy) in front
