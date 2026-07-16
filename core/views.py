@@ -28,6 +28,19 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
         open_tasks = Task.objects.filter(status__in=OPEN_STATUSES).select_related("project")
 
+        # --- Panel 0: Habits (recurring tasks, tracked per day/week/month) ---
+        habits = (
+            Task.objects.exclude(recurrence="none")
+            .select_related("project")
+            .order_by("recurrence", "project__name")
+        )
+        for h in habits:
+            h.done_now = h.is_done_for_current_period(today)
+        ctx["habits"] = habits
+        # Not-yet-done habits also surface in the Today panel, so they land in
+        # the actual daily to-do list rather than only living in a separate section.
+        ctx["today_habits"] = [h for h in habits if not h.done_now]
+
         # --- Panel 1: Today ---
         ctx["today"] = today
         ctx["today_tasks"] = open_tasks.filter(scheduled_date=today).order_by("project__name")

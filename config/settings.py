@@ -40,6 +40,7 @@ DATABASES = {
 
 # Application definition
 INSTALLED_APPS = [
+    "adminita",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -145,6 +146,9 @@ DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="tracker@todiane.com")
 
 # Who receives the daily CRM follow-up reminder
 FOLLOWUP_REMINDER_TO = env("FOLLOWUP_REMINDER_TO", default="dcorriette@gmail.com")
+
+# Who receives the daily "still open today" reminder (see daily_reminder command)
+DAILY_REMINDER_TO = env("DAILY_REMINDER_TO", default="dcorriette@gmail.com")
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

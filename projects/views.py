@@ -56,7 +56,7 @@ class ProjectUpdateView(LoginRequiredMixin, UpdateView):
 
 class TaskCreateView(LoginRequiredMixin, CreateView):
     model = Task
-    fields = ['title', 'description', 'scheduled_date']
+    fields = ['title', 'description', 'scheduled_date', 'recurrence']
     template_name = 'projects/task_form.html'
     
     def form_valid(self, form):
@@ -164,6 +164,16 @@ class TaskToggleJSONView(LoginRequiredMixin, View):
         task.status = 'planned' if task.status == 'done' else 'done'
         task.save()
         return JsonResponse({'status': task.status, 'is_completed': task.is_completed})
+
+
+class HabitToggleView(LoginRequiredMixin, View):
+    """Toggle a recurring task's completion for today/this-week/this-month. Returns JSON."""
+    def post(self, request, *args, **kwargs):
+        task = get_object_or_404(Task, pk=kwargs['pk'])
+        if not task.is_habit:
+            return JsonResponse({'error': 'not a recurring task'}, status=400)
+        is_done = task.toggle_current_period()
+        return JsonResponse({'is_done': is_done})
 
 
 class TaskSetStatusView(LoginRequiredMixin, View):
@@ -320,7 +330,7 @@ class TaskCalendarView(_TaskViewMixin, TemplateView):
 class TaskQuickCreateView(LoginRequiredMixin, CreateView):
     """General task create (used by the calendar '+' and toolbar 'New task')."""
     model = Task
-    fields = ['project', 'title', 'scheduled_date', 'status', 'estimate_minutes']
+    fields = ['project', 'title', 'scheduled_date', 'status', 'estimate_minutes', 'recurrence']
     template_name = 'projects/tasks/task_quick_form.html'
 
     def get_initial(self):
@@ -335,3 +345,45 @@ class TaskQuickCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('projects:task_table')
+
+
+class TaskBulkUpdateView(LoginRequiredMixin, View):
+    """
+    Apply one change (status / scheduled date / recurrence) or delete to many
+    tasks at once, selected via checkboxes on the Tasks table view.
+    """
+    def post(self, request, *args, **kwargs):
+        ids = request.POST.getlist('task_ids')
+        redirect_to = request.POST.get('next') or reverse('projects:task_table')
+
+        if not ids:
+            return HttpResponseRedirect(redirect_to)
+
+        qs = Task.objects.filter(pk__in=ids)
+
+        if request.POST.get('bulk_delete') == '1':
+            qs.delete()
+            return HttpResponseRedirect(redirect_to)
+
+        update_fields = {}
+
+        status = request.POST.get('bulk_status')
+        if status in dict(Task.STATUS_CHOICES):
+            update_fields['status'] = status
+            update_fields['is_completed'] = (status == 'done')
+
+        if request.POST.get('bulk_clear_date') == '1':
+            update_fields['scheduled_date'] = None
+        else:
+            scheduled_date = request.POST.get('bulk_scheduled_date')
+            if scheduled_date:
+                update_fields['scheduled_date'] = scheduled_date
+
+        recurrence = request.POST.get('bulk_recurrence')
+        if recurrence in dict(Task.RECURRENCE_CHOICES):
+            update_fields['recurrence'] = recurrence
+
+        if update_fields:
+            qs.update(**update_fields)
+
+        return HttpResponseRedirect(redirect_to)

@@ -6,41 +6,113 @@
     <h1 class="text-3xl font-bold text-gray-900 mb-6">Tasks</h1>
     {% include "projects/tasks/_toolbar.html" %}
 
-    <div class="bg-white rounded-lg shadow overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200 text-sm">
-            <thead class="bg-gray-50">
-                <tr>
-                    {% for col in columns %}
-                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
-                        <a href="?sort={{ col.next }}{% if current_project_id %}&project={{ current_project_id }}{% endif %}" class="hover:text-gray-800">
-                            {{ col.label }} <span class="text-gray-400">{{ col.arrow }}</span>
-                        </a>
-                    </th>
+    <form method="post" action="{% url 'projects:task_bulk_update' %}" id="bulk-form">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+        <div id="bulk-bar" class="hidden mb-3 flex flex-wrap items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-lg px-4 py-2 text-sm">
+            <span id="bulk-count" class="font-medium text-indigo-800 mr-2">0 selected</span>
+
+            <select name="bulk_status" class="bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">Set status…</option>
+                <option value="planned">Planned</option>
+                <option value="in_progress">In progress</option>
+                <option value="done">Done</option>
+            </select>
+
+            <input type="date" name="bulk_scheduled_date" class="bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500" title="Set scheduled date">
+
+            <label class="flex items-center gap-1 text-gray-600">
+                <input type="checkbox" name="bulk_clear_date" value="1"> Clear date
+            </label>
+
+            <select name="bulk_recurrence" class="bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">Set repeats…</option>
+                <option value="none">One-off</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+            </select>
+
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-1 px-3 rounded-md">Apply</button>
+            <button type="submit" name="bulk_delete" value="1" class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-1 px-3 rounded-md ml-auto"
+                    onclick="return confirm('Delete the selected tasks? This can\'t be undone.');">Delete selected</button>
+        </div>
+
+        <div class="bg-white rounded-lg shadow overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left w-8">
+                            <input type="checkbox" id="select-all" class="rounded border-gray-300">
+                        </th>
+                        {% for col in columns %}
+                        <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                            <a href="?sort={{ col.next }}{% if current_project_id %}&project={{ current_project_id }}{% endif %}" class="hover:text-gray-800">
+                                {{ col.label }} <span class="text-gray-400">{{ col.arrow }}</span>
+                            </a>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for task in tasks %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-4 py-2">
+                            <input type="checkbox" name="task_ids" value="{{ task.id }}" class="task-checkbox rounded border-gray-300">
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            <a href="{% url 'projects:project_detail' task.project.id %}" class="text-gray-600 hover:text-indigo-700">{{ task.project.name }}</a>
+                        </td>
+                        <td class="px-4 py-2 text-gray-900">{{ task.title }}</td>
+                        <td class="px-4 py-2 whitespace-nowrap">
+                            {% include "projects/tasks/_status_badge.html" with status=task.status %}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap {% if task.is_overdue %}text-red-600 font-medium{% else %}text-gray-600{% endif %}">
+                            {% if task.scheduled_date %}{{ task.scheduled_date|date:"M d, Y" }}{% else %}<span class="text-gray-300">—</span>{% endif %}
+                        </td>
+                        <td class="px-4 py-2 whitespace-nowrap text-gray-600">
+                            {% if task.estimate_minutes %}{{ task.estimate_minutes }}m{% else %}<span class="text-gray-300">—</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="6" class="px-4 py-8 text-center text-gray-400">No tasks{% if current_project %} for {{ current_project.name }}{% endif %}.</td></tr>
                     {% endfor %}
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                {% for task in tasks %}
-                <tr class="hover:bg-gray-50">
-                    <td class="px-4 py-2 whitespace-nowrap">
-                        <a href="{% url 'projects:project_detail' task.project.id %}" class="text-gray-600 hover:text-indigo-700">{{ task.project.name }}</a>
-                    </td>
-                    <td class="px-4 py-2 text-gray-900">{{ task.title }}</td>
-                    <td class="px-4 py-2 whitespace-nowrap">
-                        {% include "projects/tasks/_status_badge.html" with status=task.status %}
-                    </td>
-                    <td class="px-4 py-2 whitespace-nowrap {% if task.is_overdue %}text-red-600 font-medium{% else %}text-gray-600{% endif %}">
-                        {% if task.scheduled_date %}{{ task.scheduled_date|date:"M d, Y" }}{% else %}<span class="text-gray-300">—</span>{% endif %}
-                    </td>
-                    <td class="px-4 py-2 whitespace-nowrap text-gray-600">
-                        {% if task.estimate_minutes %}{{ task.estimate_minutes }}m{% else %}<span class="text-gray-300">—</span>{% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr><td colspan="5" class="px-4 py-8 text-center text-gray-400">No tasks{% if current_project %} for {{ current_project.name }}{% endif %}.</td></tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+            </table>
+        </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const selectAll = document.getElementById("select-all");
+    const checkboxes = Array.from(document.querySelectorAll(".task-checkbox"));
+    const bulkBar = document.getElementById("bulk-bar");
+    const bulkCount = document.getElementById("bulk-count");
+
+    function refresh() {
+        const checked = checkboxes.filter((cb) => cb.checked);
+        bulkBar.classList.toggle("hidden", checked.length === 0);
+        bulkCount.textContent = checked.length + " selected";
+        if (selectAll) {
+            selectAll.checked = checked.length > 0 && checked.length === checkboxes.length;
+            selectAll.indeterminate = checked.length > 0 && checked.length < checkboxes.length;
+        }
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener("change", function () {
+            checkboxes.forEach((cb) => { cb.checked = selectAll.checked; });
+            refresh();
+        });
+    }
+
+    checkboxes.forEach((cb) => cb.addEventListener("change", refresh));
+
+    refresh();
+})();
+</script>
 {% endblock %}

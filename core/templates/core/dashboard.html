@@ -8,6 +8,12 @@
         <span class="text-sm text-gray-500">Week of {{ week_start|date:"M d" }} – {{ week_end|date:"M d" }}</span>
     </div>
 
+    {% if habits %}
+    <div class="mb-6">
+        {% include "core/dashboard/_habits.html" %}
+    </div>
+    {% endif %}
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {% include "core/dashboard/_today.html" %}
         {% include "core/dashboard/_work_log.html" %}
@@ -46,6 +52,38 @@
                     btn.classList.add("bg-indigo-600");
                 }
             }
+        });
+    });
+
+    const checkSvg = '<svg class="h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
+
+    document.querySelectorAll("[data-habit-toggle]").forEach((btn) => {
+        btn.addEventListener("click", async function () {
+            const resp = await fetch(btn.dataset.habitToggle, {
+                method: "POST",
+                headers: { "X-CSRFToken": csrftoken },
+            });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            const row = btn.closest("[data-habit-row]");
+
+            if (row && row.hasAttribute("data-fade-on-done") && data.is_done) {
+                // In the Today panel: once done, fade it out — it's no longer "to do".
+                row.style.transition = "opacity .3s";
+                row.style.opacity = "0.4";
+                const label = row.querySelector("[data-habit-title]");
+                if (label) label.classList.add("line-through", "text-gray-400");
+                btn.classList.add("bg-indigo-600");
+                btn.innerHTML = checkSvg;
+                return;
+            }
+
+            // In the full Habits overview: just toggle the checked look in place.
+            btn.classList.toggle("bg-indigo-600", data.is_done);
+            btn.innerHTML = data.is_done ? checkSvg : "";
+            const label = row ? row.querySelector("[data-habit-title]") : null;
+            if (label) label.classList.toggle("line-through", data.is_done);
+            if (label) label.classList.toggle("text-gray-400", data.is_done);
         });
     });
 })();

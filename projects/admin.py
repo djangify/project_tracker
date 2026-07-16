@@ -1,6 +1,6 @@
 # projects/admin.py
 from django.contrib import admin
-from .models import Project, Task, WorkSession
+from .models import Project, Task, TaskCompletion, WorkSession
 
 class TaskInline(admin.TabularInline):
     model = Task
@@ -23,10 +23,17 @@ class ProjectAdmin(admin.ModelAdmin):
 
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
-    list_display = ('title', 'project', 'status', 'scheduled_date', 'order', 'created_at')
-    list_filter = ('status', 'project', 'scheduled_date')
+    list_display = ('title', 'project', 'status', 'recurrence', 'scheduled_date', 'order', 'created_at')
+    list_filter = ('status', 'recurrence', 'project', 'scheduled_date')
     search_fields = ('title', 'description')
     list_editable = ('status', 'order')
+
+
+@admin.register(TaskCompletion)
+class TaskCompletionAdmin(admin.ModelAdmin):
+    list_display = ('task', 'period_start', 'completed_at')
+    list_filter = ('period_start',)
+    search_fields = ('task__title',)
 
 @admin.register(WorkSession)
 class WorkSessionAdmin(admin.ModelAdmin):

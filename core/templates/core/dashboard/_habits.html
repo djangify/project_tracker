@@ -1,0 +1,27 @@
+{% comment %}Panel: Habits — recurring tasks tracked per day/week/month, not per-instance.{% endcomment %}
+<div class="bg-white rounded-lg shadow">
+    <div class="border-b px-6 py-4 flex items-center justify-between">
+        <h2 class="text-xl font-semibold text-gray-800">Habits</h2>
+        <span class="text-sm text-gray-500">Daily · Weekly · Monthly</span>
+    </div>
+    <div class="p-4 space-y-1">
+        {% for habit in habits %}
+        <div class="flex items-center gap-3 py-2" data-habit-row>
+            <button type="button" data-habit-toggle="{% url 'projects:habit_toggle' habit.id %}"
+                    class="h-4 w-4 shrink-0 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 {% if habit.done_now %}bg-indigo-600{% endif %}"
+                    aria-label="Toggle done for this period">
+                {% if habit.done_now %}
+                <svg class="h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                </svg>
+                {% endif %}
+            </button>
+            <div class="min-w-0 flex-1">
+                <span data-habit-title class="text-gray-800 {% if habit.done_now %}line-through text-gray-400{% endif %}">{{ habit.title }}</span>
+                <span class="ml-2 text-xs text-gray-500">{{ habit.project.name }}</span>
+            </div>
+            <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full shrink-0">{{ habit.get_recurrence_display }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>

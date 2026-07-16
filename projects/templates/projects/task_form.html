@@ -42,6 +42,19 @@
                     <p class="text-red-500 text-xs mt-1">{{ form.scheduled_date.errors|join:", " }}</p>
                     {% endif %}
                 </div>
+
+                <div>
+                    <label for="{{ form.recurrence.id_for_label }}" class="block text-sm font-medium text-gray-700">Repeats</label>
+                    <select name="{{ form.recurrence.name }}" id="{{ form.recurrence.id_for_label }}" class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        {% for value, label in form.fields.recurrence.choices %}
+                        <option value="{{ value }}" {% if form.recurrence.value == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-gray-400 mt-1">A habit that repeats — shows up as a daily/weekly/monthly checkbox instead of a one-time task.</p>
+                    {% if form.recurrence.errors %}
+                    <p class="text-red-500 text-xs mt-1">{{ form.recurrence.errors|join:", " }}</p>
+                    {% endif %}
+                </div>
             </div>
             
             <div class="flex justify-end">

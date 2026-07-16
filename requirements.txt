@@ -1,3 +1,4 @@
+adminita==0.1.12
 asgiref
 certifi
 cffi

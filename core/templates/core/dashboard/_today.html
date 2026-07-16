@@ -26,6 +26,26 @@
         </div>
         {% endif %}
 
+        {% if today_habits %}
+        <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-indigo-600 mb-1">Habits</h3>
+            <ul class="divide-y">
+                {% for habit in today_habits %}
+                <li class="py-2 flex items-center gap-3" data-habit-row data-fade-on-done>
+                    <button type="button" data-habit-toggle="{% url 'projects:habit_toggle' habit.id %}"
+                            class="h-4 w-4 shrink-0 rounded border border-gray-300 hover:border-indigo-500"
+                            aria-label="Toggle done for this period"></button>
+                    <div class="min-w-0 flex-1">
+                        <span data-habit-title class="text-gray-800">{{ habit.title }}</span>
+                        <span class="ml-2 text-xs text-gray-500">{{ habit.project.name }}</span>
+                    </div>
+                    <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full shrink-0">{{ habit.get_recurrence_display }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
         <div>
             <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Scheduled today</h3>
             {% if today_tasks %}

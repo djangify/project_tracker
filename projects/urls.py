@@ -20,6 +20,7 @@ urlpatterns = [
     path('tasks/board/', views.TaskBoardView.as_view(), name='task_board'),
     path('tasks/calendar/', views.TaskCalendarView.as_view(), name='task_calendar'),
     path('tasks/new/', views.TaskQuickCreateView.as_view(), name='task_quick_create'),
+    path('tasks/bulk-update/', views.TaskBulkUpdateView.as_view(), name='task_bulk_update'),
     path('task/<int:pk>/set-status/', views.TaskSetStatusView.as_view(), name='task_set_status'),
     path('project/<int:pk>/', views.ProjectDetailView.as_view(), name='project_detail'),
     path('project/<int:pk>/edit/', views.ProjectUpdateView.as_view(), name='project_edit'),
@@ -30,7 +31,8 @@ urlpatterns = [
     path('work-session/<int:pk>/delete/', views.WorkSessionDeleteView.as_view(), name='session_delete'),
     path('task/<int:pk>/toggle/', views.TaskToggleCompletionView.as_view(), name='task_toggle'),
     path('task/<int:pk>/toggle-json/', views.TaskToggleJSONView.as_view(), name='task_toggle_json'),
-    
+    path('task/<int:pk>/toggle-habit/', views.HabitToggleView.as_view(), name='habit_toggle'),
+
     # API URLs
     path('api/', include(router.urls)),
 ]

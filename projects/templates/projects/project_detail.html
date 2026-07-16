@@ -81,6 +81,17 @@
                 {% for task in project.tasks.all %}
                 <div class="py-3">
                     <div class="flex items-start">
+                        {% if task.is_habit %}
+                        <button type="button" data-habit-toggle="{% url 'projects:habit_toggle' task.id %}"
+                                class="h-4 w-4 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 mt-1 mr-3 shrink-0 {% if task.is_done_for_current_period %}bg-indigo-600{% endif %}"
+                                aria-label="Toggle done for this period">
+                            {% if task.is_done_for_current_period %}
+                            <svg class="h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                            </svg>
+                            {% endif %}
+                        </button>
+                        {% else %}
                         <form method="post" action="{% url 'projects:task_toggle' task.id %}" class="mt-1 mr-3">
                             {% csrf_token %}
                             <button type="submit" class="h-4 w-4 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 {% if task.is_completed %}bg-indigo-600{% endif %}">
@@ -91,9 +102,13 @@
                                 {% endif %}
                             </button>
                         </form>
+                        {% endif %}
                         <div class="flex-1">
-                            <h3 class="font-medium text-gray-800 {% if task.is_completed %}line-through text-gray-500{% endif %}">
+                            <h3 class="font-medium text-gray-800 {% if task.is_completed and not task.is_habit %}line-through text-gray-500{% endif %}">
                                 {{ task.title }}
+                                {% if task.is_habit %}
+                                <span class="ml-1 text-xs font-normal bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{{ task.get_recurrence_display }}</span>
+                                {% endif %}
                             </h3>
                             {% if task.description %}
                             <p class="text-sm text-gray-600 mt-1 {% if task.is_completed %}line-through text-gray-400{% endif %}">
@@ -226,4 +241,31 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    function getCookie(name) {
+        const m = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
+        return m ? m.pop() : "";
+    }
+    const csrftoken = getCookie("csrftoken");
+
+    document.querySelectorAll("[data-habit-toggle]").forEach((btn) => {
+        btn.addEventListener("click", async function () {
+            const resp = await fetch(btn.dataset.habitToggle, {
+                method: "POST",
+                headers: { "X-CSRFToken": csrftoken },
+            });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            btn.classList.toggle("bg-indigo-600", data.is_done);
+            btn.innerHTML = data.is_done
+                ? '<svg class="h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>'
+                : "";
+        });
+    });
+})();
+</script>
 {% endblock %}
