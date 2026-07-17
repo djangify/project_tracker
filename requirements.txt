@@ -20,6 +20,8 @@ tzdata
 urllib3
 whitenoise
 anthropic
+openai
+google-generativeai
 
 # Desktop app (native window + production server for the bundled .exe)
 waitress

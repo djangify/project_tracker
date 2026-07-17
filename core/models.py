@@ -39,17 +39,28 @@ class SiteConfiguration(models.Model):
     # environment variable so it works the same way in the packaged
     # desktop app as it does in dev, and so it's editable without touching
     # a config file. Stored in your local database only — never sent
-    # anywhere except directly to Anthropic when you generate content.
-    anthropic_api_key = models.CharField(
+    # anywhere except directly to whichever provider you choose below,
+    # when you generate content.
+    AI_PROVIDER_CHOICES = [
+        ("anthropic", "Anthropic (Claude)"),
+        ("openai", "OpenAI (ChatGPT)"),
+        ("gemini", "Google (Gemini)"),
+    ]
+    ai_provider = models.CharField(
+        max_length=20,
+        choices=AI_PROVIDER_CHOICES,
+        default="anthropic",
+        help_text="Which AI provider your API key below is for.",
+    )
+    ai_api_key = models.CharField(
         max_length=255,
         blank=True,
-        help_text="Your Anthropic API key (starts with sk-ant-...). Get one at console.anthropic.com. "
-        "Leave blank to disable AI content generation.",
+        help_text="Your API key for the provider selected above. Leave blank to disable AI content generation.",
     )
-    anthropic_default_model = models.CharField(
+    ai_model = models.CharField(
         max_length=100,
         blank=True,
-        help_text="Optional. Leave blank to use the default model.",
+        help_text="Optional. Leave blank to use a sensible default for the selected provider.",
     )
 
     class Meta:

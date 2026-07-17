@@ -28,6 +28,8 @@ for pkg in [
     "waitress",
     "webview",
     "anthropic",
+    "openai",
+    "google.generativeai",
 ]:
     p_datas, p_binaries, p_hidden = collect_all(pkg)
     datas += p_datas
@@ -128,7 +130,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,  # TEMP: debugging the startup crash -- set back to False before shipping
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

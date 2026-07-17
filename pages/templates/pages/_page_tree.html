@@ -15,7 +15,7 @@ Include as: {% include "pages/_page_tree.html" with pages=sidebar_root_pages %}
             {% endif %}
             <a href="{% url 'pages:detail' page.id %}"
                class="flex-1 truncate text-sm text-slate-700 hover:text-slate-900 py-0.5">
-                {% if page.icon %}{{ page.icon }} {% endif %}{{ page.title }}
+                {{ page.title }}
             </a>
             <form method="post" action="{% url 'pages:create' %}?parent={{ page.id }}" class="shrink-0">
                 {% csrf_token %}

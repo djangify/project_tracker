@@ -2,13 +2,13 @@
 <aside id="sidebar" class="hidden md:flex md:flex-col w-60 shrink-0 bg-slate-50 text-slate-700 border-r border-slate-200 overflow-y-auto">
     <nav class="p-3 space-y-4 flex-1">
         <div class="space-y-1">
-            <a href="{% url 'core:home' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">🏠 Dashboard</a>
-            <a href="{% url 'projects:project_list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">📁 Projects</a>
-            <a href="{% url 'projects:task_table' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">✅ Tasks</a>
-            <a href="{% url 'crm:contact_list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">👥 CRM</a>
-            <a href="{% url 'assets:list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">🗂 Assets</a>
-            <a href="{% url 'products:list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">💰 Products</a>
-            <a href="{% url 'core:settings' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">⚙️ Settings</a>
+            <a href="{% url 'core:home' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">Dashboard</a>
+            <a href="{% url 'projects:project_list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">Projects</a>
+            <a href="{% url 'projects:task_table' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">Tasks</a>
+            <a href="{% url 'crm:contact_list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">CRM</a>
+            <a href="{% url 'assets:list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">Assets</a>
+            <a href="{% url 'products:list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">Products</a>
+            <a href="{% url 'core:settings' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">Settings</a>
         </div>
 
         {% if sidebar_favorites %}
@@ -19,7 +19,7 @@
                 <li>
                     <a href="{% url 'pages:detail' fav.id %}"
                        class="block px-2 py-0.5 rounded hover:bg-slate-200 text-sm text-slate-700 truncate">
-                        {% if fav.icon %}{{ fav.icon }} {% endif %}{{ fav.title }}
+                        {{ fav.title }}
                     </a>
                 </li>
                 {% endfor %}
@@ -43,7 +43,7 @@
 
     <div class="p-3 border-t border-slate-200">
         <a href="{% url 'pages:trash' %}"
-           class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-600">🗑 Trash</a>
+           class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-600">Trash</a>
     </div>
 </aside>
 

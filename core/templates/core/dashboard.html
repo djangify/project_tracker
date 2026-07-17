@@ -19,6 +19,8 @@
         {% include "core/dashboard/_work_log.html" %}
         {% include "core/dashboard/_week.html" %}
         {% include "core/dashboard/_all_tasks.html" %}
+        {% include "core/dashboard/_assets.html" %}
+        {% include "core/dashboard/_products.html" %}
     </div>
 </div>
 {% endblock %}
@@ -26,6 +28,41 @@
 {% block extra_js %}
 <script>
 (function () {
+    // Collapsible dashboard panels — closed by default, remembers which
+    // ones you've opened (same expand/collapse pattern as the Pages tree
+    // in the sidebar).
+    const PANEL_KEY = "tracker-dashboard-open-panels";
+    const getOpenPanels = () => {
+        try { return JSON.parse(localStorage.getItem(PANEL_KEY)) || []; } catch (e) { return []; }
+    };
+    const setOpenPanels = (ids) => localStorage.setItem(PANEL_KEY, JSON.stringify(ids));
+    const openIds = getOpenPanels();
+
+    document.querySelectorAll("[data-panel]").forEach((panel) => {
+        const id = panel.dataset.panel;
+        const toggle = panel.querySelector("[data-panel-toggle]");
+        const body = panel.querySelector("[data-panel-body]");
+        const chevron = panel.querySelector("[data-panel-chevron]");
+        if (!toggle || !body) return;
+
+        if (openIds.includes(id)) {
+            body.classList.remove("hidden");
+            if (chevron) chevron.textContent = "▾";
+        }
+
+        toggle.addEventListener("click", () => {
+            const nowOpen = body.classList.toggle("hidden") === false;
+            if (chevron) chevron.textContent = nowOpen ? "▾" : "▸";
+            let ids = getOpenPanels();
+            if (nowOpen) {
+                if (!ids.includes(id)) ids.push(id);
+            } else {
+                ids = ids.filter((x) => x !== id);
+            }
+            setOpenPanels(ids);
+        });
+    });
+
     function getCookie(name) {
         const m = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
         return m ? m.pop() : "";

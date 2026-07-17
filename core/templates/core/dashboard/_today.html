@@ -1,10 +1,13 @@
 {% comment %}Panel: Today + overdue. Inline-completes tasks via JSON.{% endcomment %}
-<div class="bg-white rounded-lg shadow">
+<div class="bg-white rounded-lg shadow" data-panel="today">
     <div class="border-b px-6 py-4 flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-gray-800">Today</h2>
+        <button type="button" class="flex items-center gap-2 text-left" data-panel-toggle>
+            <span class="text-gray-400 text-xs w-3" data-panel-chevron>▸</span>
+            <h2 class="text-xl font-semibold text-gray-800">Today</h2>
+        </button>
         <span class="text-sm text-gray-500">{{ today|date:"l, M d" }}</span>
     </div>
-    <div class="p-4 space-y-4">
+    <div class="p-4 space-y-4 hidden" data-panel-body>
 
         {% if overdue_tasks %}
         <div>

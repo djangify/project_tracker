@@ -1,9 +1,11 @@
 # assets/management/commands/seed_examples.py
-"""Seeds generic example content so you can see what each part of the assets
-app looks like before adding a real ANTHROPIC_API_KEY: five ready-to-use
+"""Seeds generic example content so you can see what each part of the app
+looks like before adding your own real data: six ready-to-use
 PromptTemplates, two sample Assets, a pre-filled VoiceProfile (as if it had
-already been distilled), and one finished GenerationJob with a fake generated
-blog post, so the whole flow — asset in, page out — is visible end to end.
+already been distilled), one finished GenerationJob with a fake generated
+blog post (so the whole flow — asset in, page out — is visible end to end),
+and two example Products with funnel steps and sale history so Products
+isn't empty either.
 
 Everything created here is prefixed "[Example]" so it's easy to spot and
 remove later. Safe to re-run: uses get_or_create, won't duplicate.
@@ -12,10 +14,13 @@ Usage:
     python manage.py seed_examples            # create the example content
     python manage.py seed_examples --remove    # delete it again
 """
+import datetime
+
 from django.core.management.base import BaseCommand
 
 from assets.models import Asset, GenerationJob, PromptTemplate, VoiceProfile
 from pages.models import Page
+from products.models import FunnelStep, Product, Sale
 
 PREFIX = "[Example]"
 
@@ -209,6 +214,40 @@ EXAMPLE_GENERATED_BLOCKS = {
 }
 
 
+PRODUCTS = [
+    {
+        "name": f"{PREFIX} 90-Day Content Sprint",
+        "description": (
+            "A guided 90-day program to build a consistent content habit — weekly prompts, "
+            "templates, and accountability check-ins."
+        ),
+        "price": "147.00",
+        "product_type": "course",
+        "status": "active",
+    },
+    {
+        "name": f"{PREFIX} Brand Voice Workbook",
+        "description": (
+            "A short workbook that walks you through defining your tone, sentence style, and "
+            "words to avoid — the same questions this app's Voice Profile feature asks."
+        ),
+        "price": "27.00",
+        "product_type": "digital_download",
+        "status": "active",
+    },
+]
+
+# (product index, contact, amount, days_ago) — spread across the last few weeks
+# so the revenue rollup on the Products list looks like real activity, not one lump sum.
+SALES = [
+    (0, "147.00", 3),
+    (0, "147.00", 11),
+    (1, "27.00", 2),
+    (1, "27.00", 9),
+    (1, "27.00", 20),
+]
+
+
 class Command(BaseCommand):
     help = "Seed generic example prompt templates, assets, a voice profile and a sample generated page."
 
@@ -258,7 +297,6 @@ class Command(BaseCommand):
         if not GenerationJob.objects.filter(instructions__startswith=PREFIX).exists():
             page = Page.objects.create(
                 title=f"{PREFIX} Why Consistency Beats Frequency",
-                icon="📝",
                 content=EXAMPLE_GENERATED_BLOCKS,
             )
             job = GenerationJob.objects.create(
@@ -270,6 +308,8 @@ class Command(BaseCommand):
             )
             job.assets.set([testimonial, writing_sample])
             created.append(f"Page + GenerationJob: {page.title}")
+
+        created += self._seed_products()
 
         if created:
             self.stdout.write(self.style.SUCCESS("Seeded example content:"))
@@ -284,6 +324,42 @@ class Command(BaseCommand):
         else:
             self.stdout.write("Example content already exists — nothing to do.")
 
+    def _seed_products(self):
+        created = []
+        products = []
+        for data in PRODUCTS:
+            obj, was_created = Product.objects.get_or_create(
+                name=data["name"], defaults={k: v for k, v in data.items() if k != "name"}
+            )
+            products.append(obj)
+            if was_created:
+                created.append(f"Product: {obj.name}")
+
+        if not FunnelStep.objects.filter(product__in=products, name__startswith=PREFIX).exists():
+            FunnelStep.objects.get_or_create(
+                product=products[0],
+                name=f"{PREFIX} Add the workbook — 40% off",
+                defaults={
+                    "position": 1,
+                    "price_override": "16.00",
+                    "is_oto": True,
+                    "description": "One-time offer shown right after buying the Content Sprint.",
+                },
+            )
+
+        if not Sale.objects.filter(notes__startswith=PREFIX).exists():
+            today = datetime.date.today()
+            for product_index, amount, days_ago in SALES:
+                Sale.objects.create(
+                    product=products[product_index],
+                    amount=amount,
+                    date=today - datetime.timedelta(days=days_ago),
+                    notes=f"{PREFIX} seeded sale",
+                )
+            created.append(f"Sales: {len(SALES)} example sale records")
+
+        return created
+
     def _remove(self):
         counts = {
             "GenerationJob": GenerationJob.objects.filter(instructions__startswith=PREFIX).delete()[0],
@@ -291,6 +367,9 @@ class Command(BaseCommand):
             "VoiceProfile": VoiceProfile.objects.filter(name__startswith=PREFIX).delete()[0],
             "Asset": Asset.objects.filter(title__startswith=PREFIX).delete()[0],
             "PromptTemplate": PromptTemplate.objects.filter(name__startswith=PREFIX).delete()[0],
+            "Sale": Sale.objects.filter(notes__startswith=PREFIX).delete()[0],
+            "FunnelStep": FunnelStep.objects.filter(name__startswith=PREFIX).delete()[0],
+            "Product": Product.objects.filter(name__startswith=PREFIX).delete()[0],
         }
         self.stdout.write(self.style.SUCCESS("Removed example content:"))
         for label, count in counts.items():

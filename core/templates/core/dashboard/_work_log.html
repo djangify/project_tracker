@@ -1,10 +1,13 @@
 {% comment %}Panel: Work Log — this week's sessions, weekly total, per-project split.{% endcomment %}
-<div class="bg-white rounded-lg shadow">
+<div class="bg-white rounded-lg shadow" data-panel="work_log">
     <div class="border-b px-6 py-4 flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-gray-800">Work Log</h2>
+        <button type="button" class="flex items-center gap-2 text-left" data-panel-toggle>
+            <span class="text-gray-400 text-xs w-3" data-panel-chevron>▸</span>
+            <h2 class="text-xl font-semibold text-gray-800">Work Log</h2>
+        </button>
         <span class="text-sm text-gray-500">{{ work_total_label }} this week</span>
     </div>
-    <div class="p-4 space-y-4">
+    <div class="p-4 space-y-4 hidden" data-panel-body>
 
         {% if work_bars %}
         <div class="space-y-2">

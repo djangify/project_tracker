@@ -1,40 +1,30 @@
-{% comment %}Panel: All open tasks grouped by project.{% endcomment %}
-<div class="bg-white rounded-lg shadow">
+{% comment %}Panel: open task counts per project, as bars — not a full task list (see the Tasks page for that).{% endcomment %}
+<div class="bg-white rounded-lg shadow" data-panel="all_tasks">
     <div class="border-b px-6 py-4 flex items-center justify-between">
-        <h2 class="text-xl font-semibold text-gray-800">All Tasks</h2>
-        <a href="{% url 'projects:project_list' %}" class="text-sm text-indigo-600 hover:text-indigo-800">Projects →</a>
+        <button type="button" class="flex items-center gap-2 text-left" data-panel-toggle>
+            <span class="text-gray-400 text-xs w-3" data-panel-chevron>▸</span>
+            <h2 class="text-xl font-semibold text-gray-800">All Tasks</h2>
+        </button>
+        <a href="{% url 'projects:task_table' %}" class="text-sm text-indigo-600 hover:text-indigo-800">Tasks →</a>
     </div>
-    <div class="p-4">
-        {% if tasks_by_project %}
-        <div class="space-y-4">
-            {% for project, tasks in tasks_by_project %}
+    <div class="p-4 hidden" data-panel-body>
+        {% if task_bars %}
+        <p class="text-sm text-gray-500 mb-3">{{ open_task_total }} open task{{ open_task_total|pluralize }} across {{ task_bars|length }} project{{ task_bars|length|pluralize }}</p>
+        <div class="space-y-2">
+            {% for bar in task_bars %}
             <div>
-                <h3 class="text-sm font-semibold text-gray-700 mb-1">
-                    <a href="{% url 'projects:project_detail' project.id %}" class="hover:text-indigo-700">{{ project.name }}</a>
-                    <span class="text-gray-400 font-normal">({{ tasks|length }})</span>
-                </h3>
-                <ul class="divide-y">
-                    {% for task in tasks %}
-                    <li class="py-1.5 flex items-center gap-2 text-sm">
-                        {% if task.status == 'in_progress' %}
-                        <span class="w-2 h-2 rounded-full bg-yellow-500 shrink-0" title="In progress"></span>
-                        {% else %}
-                        <span class="w-2 h-2 rounded-full bg-gray-300 shrink-0" title="Planned"></span>
-                        {% endif %}
-                        <span class="text-gray-800 truncate flex-1">{{ task.title }}</span>
-                        {% if task.scheduled_date %}
-                        <span class="text-xs shrink-0 {% if task.is_overdue %}text-red-600{% else %}text-gray-500{% endif %}">
-                            {{ task.scheduled_date|date:"M d" }}
-                        </span>
-                        {% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
+                <div class="flex justify-between text-xs text-gray-600 mb-0.5">
+                    <a href="{% url 'projects:project_detail' bar.project.id %}" class="truncate hover:text-indigo-700">{{ bar.project.name }}</a>
+                    <span class="shrink-0 ml-2">{{ bar.count }}</span>
+                </div>
+                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div class="h-2 bg-indigo-500 rounded-full" style="width: {{ bar.pct }}%"></div>
+                </div>
             </div>
             {% endfor %}
         </div>
         {% else %}
-        <p class="text-gray-400 text-sm">No open tasks. 🎉</p>
+        <p class="text-gray-400 text-sm">No open tasks.</p>
         {% endif %}
     </div>
 </div>

@@ -1,0 +1,47 @@
+{% comment %}Panel: Products — revenue bar per product + totals, not a full sales ledger.{% endcomment %}
+<div class="bg-white rounded-lg shadow" data-panel="products">
+    <div class="border-b px-6 py-4 flex items-center justify-between">
+        <button type="button" class="flex items-center gap-2 text-left" data-panel-toggle>
+            <span class="text-gray-400 text-xs w-3" data-panel-chevron>▸</span>
+            <h2 class="text-xl font-semibold text-gray-800">Products</h2>
+        </button>
+        <a href="{% url 'products:list' %}" class="text-sm text-indigo-600 hover:text-indigo-800">Products →</a>
+    </div>
+    <div class="p-4 space-y-4 hidden" data-panel-body>
+        <div class="grid grid-cols-3 gap-3">
+            <div class="bg-gray-50 rounded p-3">
+                <p class="text-2xl font-bold text-gray-800">{{ active_product_count }}</p>
+                <p class="text-xs text-gray-500">Active</p>
+            </div>
+            <div class="bg-gray-50 rounded p-3">
+                <p class="text-2xl font-bold text-green-600">&pound;{{ total_revenue|floatformat:0 }}</p>
+                <p class="text-xs text-gray-500">Total revenue</p>
+            </div>
+            <div class="bg-gray-50 rounded p-3">
+                <p class="text-2xl font-bold text-gray-800">{{ sales_last_30_days }}</p>
+                <p class="text-xs text-gray-500">Sales (30d)</p>
+            </div>
+        </div>
+
+        {% if product_bars %}
+        <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Revenue by product</h3>
+            <div class="space-y-2">
+                {% for bar in product_bars %}
+                <div>
+                    <div class="flex justify-between text-xs text-gray-600 mb-0.5">
+                        <a href="{% url 'products:detail' bar.product.id %}" class="truncate hover:text-indigo-700">{{ bar.product.name }}</a>
+                        <span class="shrink-0 ml-2">&pound;{{ bar.revenue|floatformat:0 }}</span>
+                    </div>
+                    <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-2 bg-green-500 rounded-full" style="width: {{ bar.pct }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% else %}
+        <p class="text-gray-400 text-sm">No sales logged yet.</p>
+        {% endif %}
+    </div>
+</div>

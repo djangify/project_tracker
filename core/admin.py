@@ -16,14 +16,11 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
     list_display = ["site_name"]
     list_display_links = ["site_name"]
 
-    formfield_overrides = {
-        # Masked like a password field, but pre-filled so re-saving the form
-        # doesn't blank out an already-set key.
-    }
-
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         field = super().formfield_for_dbfield(db_field, request, **kwargs)
-        if db_field.name == "anthropic_api_key":
+        if db_field.name == "ai_api_key":
+            # Masked like a password field, but pre-filled so re-saving the
+            # form doesn't blank out an already-set key.
             field.widget = forms.PasswordInput(render_value=True, attrs=field.widget.attrs)
         return field
 
@@ -40,7 +37,7 @@ class SiteConfigurationAdmin(admin.ModelAdmin):
         ("Branding", {"fields": ("logo", "favicon", "default_og_image")}),
         (
             "AI Generation",
-            {"fields": ("anthropic_api_key", "anthropic_default_model")},
+            {"fields": ("ai_provider", "ai_api_key", "ai_model")},
         ),
     )
 

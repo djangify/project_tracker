@@ -4,12 +4,15 @@ from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Sum
 from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import TemplateView, UpdateView
 
+from assets.models import Asset, GenerationJob, VoiceProfile
+from products.models import Product, Sale
 from projects.models import Project, Task, WorkSession
 from .models import SiteConfiguration
 from .utils import format_duration
@@ -73,13 +76,18 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             )
         ctx["week_days"] = days
 
-        # --- Panel 3: All Tasks (open, grouped by project) ---
-        grouped = defaultdict(list)
-        for t in open_tasks.order_by("project__name", "scheduled_date", "order"):
-            grouped[t.project].append(t)
-        ctx["tasks_by_project"] = sorted(
-            grouped.items(), key=lambda kv: kv[0].name.lower()
-        )
+        # --- Panel 3: All Tasks — a bar per project instead of listing every
+        # task. The full list already exists on the Tasks page (table/board/
+        # calendar); this panel is a glanceable summary, not a duplicate of it.
+        counts = defaultdict(int)
+        for t in open_tasks:
+            counts[t.project] += 1
+        max_count = max(counts.values()) if counts else 0
+        ctx["task_bars"] = [
+            {"project": p, "count": c, "pct": round(c / max_count * 100) if max_count else 0}
+            for p, c in sorted(counts.items(), key=lambda kv: kv[1], reverse=True)
+        ]
+        ctx["open_task_total"] = sum(counts.values())
 
         # --- Panel 4: Work Log (this week) ---
         sessions = (
@@ -104,6 +112,40 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             for p, m in sorted(totals.items(), key=lambda kv: kv[1], reverse=True)
         ]
 
+        # --- Panel 5: Assets — counts + recent generation activity, not a
+        # list of every asset (that's what the Assets page is for). ---
+        ctx["asset_count"] = Asset.objects.count()
+        ctx["voice_profile_count"] = VoiceProfile.objects.count()
+        recent_jobs = GenerationJob.objects.select_related("prompt_template", "result_page").order_by(
+            "-created_at"
+        )[:5]
+        ctx["recent_generation_jobs"] = recent_jobs
+        job_counts = GenerationJob.objects.values_list("status", flat=True)
+        job_status_counts = defaultdict(int)
+        for status in job_counts:
+            job_status_counts[status] += 1
+        ctx["generation_job_counts"] = dict(job_status_counts)
+
+        # --- Panel 6: Products — revenue bar per product + recent sales,
+        # not a full transaction ledger (see the Products page for that). ---
+        product_revenue = (
+            Product.objects.annotate(revenue=Sum("sales__amount"))
+            .filter(revenue__isnull=False)
+            .order_by("-revenue")[:5]
+        )
+        max_revenue = max((p.revenue for p in product_revenue), default=0)
+        ctx["product_bars"] = [
+            {
+                "product": p,
+                "revenue": p.revenue,
+                "pct": round(p.revenue / max_revenue * 100) if max_revenue else 0,
+            }
+            for p in product_revenue
+        ]
+        ctx["total_revenue"] = Sale.objects.aggregate(total=Sum("amount"))["total"] or 0
+        ctx["active_product_count"] = Product.objects.filter(status="active").count()
+        ctx["sales_last_30_days"] = Sale.objects.filter(date__gte=today - timedelta(days=30)).count()
+
         ctx["week_start"] = week_start
         ctx["week_end"] = week_end
         return ctx
@@ -122,8 +164,9 @@ class SettingsView(LoginRequiredMixin, UpdateView):
         "site_name",
         "site_description",
         "contact_email",
-        "anthropic_api_key",
-        "anthropic_default_model",
+        "ai_provider",
+        "ai_api_key",
+        "ai_model",
     ]
     success_url = reverse_lazy("core:settings")
 

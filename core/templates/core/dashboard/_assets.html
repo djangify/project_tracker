@@ -1,0 +1,62 @@
+{% comment %}Panel: Assets — counts + recent generation activity, not a list of every asset.{% endcomment %}
+<div class="bg-white rounded-lg shadow" data-panel="assets">
+    <div class="border-b px-6 py-4 flex items-center justify-between">
+        <button type="button" class="flex items-center gap-2 text-left" data-panel-toggle>
+            <span class="text-gray-400 text-xs w-3" data-panel-chevron>▸</span>
+            <h2 class="text-xl font-semibold text-gray-800">Assets</h2>
+        </button>
+        <a href="{% url 'assets:list' %}" class="text-sm text-indigo-600 hover:text-indigo-800">Assets →</a>
+    </div>
+    <div class="p-4 space-y-4 hidden" data-panel-body>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="bg-gray-50 rounded p-3">
+                <p class="text-2xl font-bold text-gray-800">{{ asset_count }}</p>
+                <p class="text-xs text-gray-500">Asset{{ asset_count|pluralize }}</p>
+            </div>
+            <div class="bg-gray-50 rounded p-3">
+                <p class="text-2xl font-bold text-gray-800">{{ voice_profile_count }}</p>
+                <p class="text-xs text-gray-500">Voice profile{{ voice_profile_count|pluralize }}</p>
+            </div>
+        </div>
+
+        {% if generation_job_counts %}
+        <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Generations</h3>
+            <div class="flex flex-wrap gap-2 text-xs">
+                {% if generation_job_counts.completed %}
+                <span class="px-2 py-1 rounded-full bg-green-100 text-green-800">{{ generation_job_counts.completed }} completed</span>
+                {% endif %}
+                {% if generation_job_counts.failed %}
+                <span class="px-2 py-1 rounded-full bg-red-100 text-red-800">{{ generation_job_counts.failed }} failed</span>
+                {% endif %}
+                {% if generation_job_counts.pending %}
+                <span class="px-2 py-1 rounded-full bg-gray-100 text-gray-700">{{ generation_job_counts.pending }} pending</span>
+                {% endif %}
+                {% if generation_job_counts.in_progress %}
+                <span class="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">{{ generation_job_counts.in_progress }} in progress</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div>
+            <h3 class="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-1">Recent</h3>
+            {% if recent_generation_jobs %}
+            <ul class="divide-y">
+                {% for job in recent_generation_jobs %}
+                <li class="py-1.5 flex items-center justify-between text-sm">
+                    <span class="text-gray-800 truncate">{{ job.prompt_template.name|default:"Generation" }}</span>
+                    {% if job.status == 'completed' and job.result_page %}
+                    <a href="{{ job.result_page.get_absolute_url }}" class="text-xs text-indigo-600 hover:text-indigo-800 shrink-0 ml-2">View →</a>
+                    {% else %}
+                    <span class="text-xs text-gray-500 shrink-0 ml-2">{{ job.get_status_display }}</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p class="text-gray-400 text-sm">No content generated yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>

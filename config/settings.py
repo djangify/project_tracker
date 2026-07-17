@@ -188,10 +188,13 @@ DAILY_REMINDER_TO = env("DAILY_REMINDER_TO", default="dcorriette@gmail.com")
 # -----------------------------------------------------------------------------
 # AI generation (used by the assets app to turn source material into content)
 # -----------------------------------------------------------------------------
-# Not set by default — generation features show a clear error until this is
-# added to your .env file. Nothing else in the site depends on it.
-ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
-ANTHROPIC_DEFAULT_MODEL = env("ANTHROPIC_DEFAULT_MODEL", default="claude-sonnet-4-5")
+# End users (including the packaged .exe) set these from Settings inside the
+# app, not here — see core.models.SiteConfiguration. These env vars are a
+# dev-only fallback, used only if nothing is saved in Settings yet. Supports
+# "anthropic", "openai", or "gemini".
+AI_PROVIDER = env("AI_PROVIDER", default="anthropic")
+AI_API_KEY = env("AI_API_KEY", default="")
+AI_MODEL = env("AI_MODEL", default="")
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
