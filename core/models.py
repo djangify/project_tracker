@@ -32,8 +32,25 @@ class SiteConfiguration(models.Model):
     # Add branding
     logo = models.ImageField(upload_to='site/', blank=True, null=True)
     favicon = models.ImageField(upload_to='site/', blank=True, null=True)
-    default_og_image = models.ImageField(upload_to='site/', blank=True, null=True, 
+    default_og_image = models.ImageField(upload_to='site/', blank=True, null=True,
                                      help_text="Default image for social media sharing (1200x630px recommended)")
+
+    # AI generation (assets app) — entered here rather than as an
+    # environment variable so it works the same way in the packaged
+    # desktop app as it does in dev, and so it's editable without touching
+    # a config file. Stored in your local database only — never sent
+    # anywhere except directly to Anthropic when you generate content.
+    anthropic_api_key = models.CharField(
+        max_length=255,
+        blank=True,
+        help_text="Your Anthropic API key (starts with sk-ant-...). Get one at console.anthropic.com. "
+        "Leave blank to disable AI content generation.",
+    )
+    anthropic_default_model = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Optional. Leave blank to use the default model.",
+    )
 
     class Meta:
         verbose_name = "Site Configuration"

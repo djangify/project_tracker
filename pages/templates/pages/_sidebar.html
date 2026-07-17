@@ -6,6 +6,9 @@
             <a href="{% url 'projects:project_list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">📁 Projects</a>
             <a href="{% url 'projects:task_table' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">✅ Tasks</a>
             <a href="{% url 'crm:contact_list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">👥 CRM</a>
+            <a href="{% url 'assets:list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">🗂 Assets</a>
+            <a href="{% url 'products:list' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">💰 Products</a>
+            <a href="{% url 'core:settings' %}" class="block px-2 py-1 rounded hover:bg-slate-200 text-sm text-slate-700">⚙️ Settings</a>
         </div>
 
         {% if sidebar_favorites %}

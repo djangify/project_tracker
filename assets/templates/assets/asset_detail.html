@@ -1,0 +1,110 @@
+<!-- assets/templates/assets/asset_detail.html -->
+{% extends 'base.html' %}
+{% block title %}{{ asset.title }} - Assets{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <a href="{% url 'assets:list' %}" class="text-indigo-600 hover:text-indigo-800">← Back to assets</a>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="p-6 border-b">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">{{ asset.title }}</h1>
+                    <div class="flex items-center flex-wrap mt-2 gap-2">
+                        <span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800">{{ asset.get_file_type_display }}</span>
+                        <span class="text-sm text-gray-500">{{ asset.token_count }} tokens (est.)</span>
+                        {% if asset.project %}<span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800">📁 {{ asset.project.name }}</span>{% endif %}
+                        {% if asset.contact %}<span class="px-3 py-1 text-sm rounded-full bg-gray-100 text-gray-800">👤 {{ asset.contact.name }}</span>{% endif %}
+                    </div>
+                    {% if asset.tag_list %}
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        {% for tag in asset.tag_list %}<span class="px-2 py-0.5 text-xs rounded-full bg-indigo-50 text-indigo-700">{{ tag }}</span>{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="space-x-2">
+                    <a href="{% url 'assets:edit' asset.id %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Edit</a>
+                    <a href="{% url 'assets:delete' asset.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">Delete</a>
+                </div>
+            </div>
+
+            {% if asset.file %}
+            <p class="mt-4 text-sm"><a href="{{ asset.file.url }}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-800">📎 {{ asset.file.name }}</a></p>
+            {% endif %}
+
+            <div class="mt-6">
+                <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Content</h2>
+                <div class="bg-gray-50 rounded p-4 text-sm text-gray-800 whitespace-pre-line max-h-96 overflow-y-auto">
+                    {{ asset.content|default:"No text content." }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate content from this asset -->
+        <div class="p-6 border-b bg-indigo-50">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Generate content from this asset</h2>
+            {% if prompt_templates %}
+            <form method="post" action="{% url 'assets:generate' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="assets" value="{{ asset.id }}">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Prompt template</label>
+                        <select name="prompt_template" class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm" required>
+                            {% for template in prompt_templates %}
+                            <option value="{{ template.id }}">{{ template.name }} ({{ template.get_content_type_display }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Voice profile (optional)</label>
+                        <select name="voice_profile" class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm">
+                            <option value="">— None —</option>
+                            {% for voice in voice_profiles %}
+                            <option value="{{ voice.id }}" {% if voice.is_active %}selected{% endif %}>{{ voice.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Extra instructions (optional)</label>
+                    <textarea name="instructions" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm" placeholder="e.g. keep it under 300 words, focus on the launch offer"></textarea>
+                </div>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Generate →</button>
+                <p class="text-xs text-gray-500">Result is saved as a new page. Requires ANTHROPIC_API_KEY to be set in .env.</p>
+            </form>
+            {% else %}
+            <p class="text-sm text-gray-600">No prompt templates yet — <a href="{% url 'admin:assets_prompttemplate_add' %}" class="text-indigo-600 hover:text-indigo-800">add one in admin</a> to enable generation.</p>
+            {% endif %}
+        </div>
+
+        {% if recent_jobs %}
+        <div class="p-6">
+            <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Recent generations from this asset</h2>
+            <ul class="divide-y">
+                {% for job in recent_jobs %}
+                <li class="py-2 flex justify-between items-center text-sm">
+                    <span>
+                        {{ job.prompt_template.name|default:"—" }}
+                        <span class="text-gray-400">· {{ job.created_at|date:"M d, Y H:i" }}</span>
+                    </span>
+                    <span>
+                        {% if job.status == 'completed' and job.result_page %}
+                        <a href="{{ job.result_page.get_absolute_url }}" class="text-indigo-600 hover:text-indigo-800">View page →</a>
+                        {% elif job.status == 'failed' %}
+                        <span class="text-red-600">Failed{% if job.error_message %}: {{ job.error_message }}{% endif %}</span>
+                        {% else %}
+                        <span class="text-gray-500">{{ job.get_status_display }}</span>
+                        {% endif %}
+                    </span>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

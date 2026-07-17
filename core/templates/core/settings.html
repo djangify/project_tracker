@@ -1,0 +1,84 @@
+<!-- core/templates/core/settings.html -->
+{% extends 'base.html' %}
+{% block title %}Settings - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <h1 class="text-3xl font-bold text-gray-800 mb-6">Settings</h1>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="mb-4 bg-green-100 text-green-800 rounded px-4 py-2 text-sm">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <form method="post" class="space-y-8">
+        {% csrf_token %}
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Site</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="{{ form.site_name.id_for_label }}" class="block text-sm font-medium text-gray-700">Site name</label>
+                    <input type="text" name="{{ form.site_name.name }}" id="{{ form.site_name.id_for_label }}" value="{{ form.site_name.value|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm">
+                </div>
+                <div>
+                    <label for="{{ form.site_description.id_for_label }}" class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="{{ form.site_description.name }}" id="{{ form.site_description.id_for_label }}" rows="2" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm">{{ form.site_description.value|default:'' }}</textarea>
+                </div>
+                <div>
+                    <label for="{{ form.contact_email.id_for_label }}" class="block text-sm font-medium text-gray-700">Contact email</label>
+                    <input type="email" name="{{ form.contact_email.name }}" id="{{ form.contact_email.id_for_label }}" value="{{ form.contact_email.value|default:'' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm">
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+            <h2 class="text-lg font-semibold text-gray-800 mb-1">AI content generation</h2>
+            <p class="text-sm text-gray-500 mb-4">
+                Powers "Generate content" and "Distill from sources" in Assets.
+                Optional — everything else works without it.
+                Get a key at <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-800">console.anthropic.com</a>.
+                Stored locally in your own database, sent only directly to Anthropic when you generate something.
+            </p>
+            <div class="space-y-4">
+                <div>
+                    <label for="{{ form.anthropic_api_key.id_for_label }}" class="block text-sm font-medium text-gray-700">Anthropic API key</label>
+                    <div class="mt-1 flex gap-2">
+                        <input type="password" name="{{ form.anthropic_api_key.name }}" id="{{ form.anthropic_api_key.id_for_label }}" value="{{ form.anthropic_api_key.value|default:'' }}" placeholder="sk-ant-..." class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm font-mono" autocomplete="off">
+                        <button type="button" id="toggle-key" class="shrink-0 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium px-3 rounded">Show</button>
+                    </div>
+                    {% if object.anthropic_api_key %}
+                    <p class="text-xs text-green-600 mt-1">A key is currently set.</p>
+                    {% else %}
+                    <p class="text-xs text-gray-500 mt-1">No key set — generation features are off.</p>
+                    {% endif %}
+                </div>
+                <div>
+                    <label for="{{ form.anthropic_default_model.id_for_label }}" class="block text-sm font-medium text-gray-700">Model (optional)</label>
+                    <input type="text" name="{{ form.anthropic_default_model.name }}" id="{{ form.anthropic_default_model.id_for_label }}" value="{{ form.anthropic_default_model.value|default:'' }}" placeholder="Leave blank to use the default" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm font-mono">
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Save settings</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const toggle = document.getElementById("toggle-key");
+    const input = document.getElementById("{{ form.anthropic_api_key.id_for_label }}");
+    if (!toggle || !input) return;
+    toggle.addEventListener("click", function () {
+        const isPassword = input.type === "password";
+        input.type = isPassword ? "text" : "password";
+        toggle.textContent = isPassword ? "Hide" : "Show";
+    });
+})();
+</script>
+{% endblock %}

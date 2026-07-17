@@ -7,6 +7,8 @@ from django.shortcuts import redirect
 from django.views.static import serve
 from django.views.generic import TemplateView
 
+from .views import health_check
+
 # Customize admin site
 admin.site.site_header = "Project Tracker"
 admin.site.site_title = "Project Tracker Admin Portal"
@@ -19,10 +21,13 @@ def redirect_to_admin_login(request):
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("health/", health_check, name="health_check"),
     path("", include("core.urls")),
     path("projects/", include("projects.urls")),
     path("crm/", include("crm.urls")),
     path("pages/", include("pages.urls")),
+    path("assets/", include("assets.urls")),
+    path("products/", include("products.urls")),
     # login redirection
     path("accounts/login/", redirect_to_admin_login, name="login"),
     path(

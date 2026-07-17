@@ -1,0 +1,78 @@
+<!-- assets/templates/assets/asset_list.html -->
+{% extends 'base.html' %}
+{% block title %}Assets{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Assets</h1>
+        <div class="space-x-2">
+            <a href="{% url 'assets:voice_list' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">
+                Voice profiles
+            </a>
+            <a href="{% url 'assets:create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">
+                Add Asset
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white shadow rounded-lg mb-6 p-4">
+        <form method="get" class="flex gap-4 items-end">
+            <div class="flex-1">
+                <label class="block text-xs font-medium text-gray-500 mb-1">Search</label>
+                <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Title..."
+                    class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+            </div>
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Search</button>
+        </form>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Linked to</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tokens (est.)</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for asset in assets %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{% url 'assets:detail' asset.id %}" class="font-medium text-gray-800 hover:text-indigo-600">{{ asset.title }}</a>
+                            {% if asset.tag_list %}
+                            <div class="mt-1 flex flex-wrap gap-1">
+                                {% for tag in asset.tag_list %}
+                                <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ asset.get_file_type_display }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {% if asset.project %}📁 {{ asset.project.name }}{% endif %}
+                            {% if asset.contact %} · 👤 {{ asset.contact.name }}{% endif %}
+                            {% if not asset.project and not asset.contact %}—{% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ asset.token_count }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                            <a href="{% url 'assets:detail' asset.id %}" class="text-indigo-600 hover:text-indigo-900">View →</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                            No assets yet. Click "Add Asset" to upload or paste your first piece of content.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

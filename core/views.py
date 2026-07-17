@@ -2,13 +2,16 @@
 from collections import defaultdict
 from datetime import timedelta
 
+from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.urls import reverse_lazy
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, UpdateView
 
 from projects.models import Project, Task, WorkSession
+from .models import SiteConfiguration
 from .utils import format_duration
 
 OPEN_STATUSES = ["planned", "in_progress"]
@@ -104,3 +107,31 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         ctx["week_start"] = week_start
         ctx["week_end"] = week_end
         return ctx
+
+
+class SettingsView(LoginRequiredMixin, UpdateView):
+    """
+    In-app settings page — the AI key lives here (not an environment
+    variable) so it works identically in the packaged desktop app and in
+    dev, and so it's editable without touching a config file.
+    """
+
+    model = SiteConfiguration
+    template_name = "core/settings.html"
+    fields = [
+        "site_name",
+        "site_description",
+        "contact_email",
+        "anthropic_api_key",
+        "anthropic_default_model",
+    ]
+    success_url = reverse_lazy("core:settings")
+
+    def get_object(self, queryset=None):
+        obj, _ = SiteConfiguration.objects.get_or_create(pk=1)
+        return obj
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, "Settings saved.")
+        return response

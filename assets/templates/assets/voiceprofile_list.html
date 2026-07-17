@@ -1,0 +1,30 @@
+<!-- assets/templates/assets/voiceprofile_list.html -->
+{% extends 'base.html' %}
+{% block title %}Voice profiles{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Voice profiles</h1>
+        <div class="space-x-2">
+            <a href="{% url 'assets:list' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">Assets</a>
+            <a href="{% url 'assets:voice_create' %}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">New voice profile</a>
+        </div>
+    </div>
+
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <ul class="divide-y">
+            {% for voice in voice_profiles %}
+            <li class="p-4 flex justify-between items-center hover:bg-gray-50">
+                <a href="{% url 'assets:voice_detail' voice.id %}" class="font-medium text-gray-800 hover:text-indigo-600">
+                    {{ voice.name }} {% if voice.is_active %}<span class="text-xs text-indigo-600">(default)</span>{% endif %}
+                </a>
+                <span class="text-sm text-gray-500">{{ voice.source_assets.count }} source asset{{ voice.source_assets.count|pluralize }}</span>
+            </li>
+            {% empty %}
+            <li class="p-8 text-center text-gray-500">No voice profiles yet. Add a few writing samples as assets, then create one.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

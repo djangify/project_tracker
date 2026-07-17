@@ -1,0 +1,39 @@
+<!-- assets/templates/assets/voiceprofile_form.html -->
+{% extends 'base.html' %}
+{% block title %}New voice profile{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="mb-6">
+        <a href="{% url 'assets:voice_list' %}" class="text-indigo-600 hover:text-indigo-800">← Back to voice profiles</a>
+    </div>
+    <div class="bg-white shadow-md rounded-lg overflow-hidden p-6">
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">New voice profile</h1>
+        <p class="text-sm text-gray-500 mb-6">Pick a few assets that represent how you write (blog posts, emails, past captions). After saving, use "Distill from sources" to have the AI fill in the rest.</p>
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            <div>
+                <label for="{{ form.name.id_for_label }}" class="block text-sm font-medium text-gray-700">Name</label>
+                <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" value="{{ form.name.value|default:'My voice' }}" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Source assets</label>
+                <select name="{{ form.source_assets.name }}" multiple size="8" class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm">
+                    {% for asset in form.fields.source_assets.queryset %}
+                    <option value="{{ asset.pk }}">{{ asset.title }}</option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Ctrl/Cmd-click to select multiple.</p>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" name="{{ form.is_active.name }}" id="{{ form.is_active.id_for_label }}" checked class="h-4 w-4 text-indigo-600 border-gray-300 rounded">
+                <label for="{{ form.is_active.id_for_label }}" class="ml-2 text-sm text-gray-700">Use as default voice</label>
+            </div>
+            <div class="flex justify-end">
+                <a href="{% url 'assets:voice_list' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded mr-2">Cancel</a>
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,6 +1,7 @@
 from pathlib import Path
 import environ
 import os
+import sys
 
 
 # Initialize environment variables
@@ -9,6 +10,25 @@ environ.Env.read_env(os.path.join(Path(__file__).resolve().parent.parent, ".env"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Where user data (database, uploaded media) is stored.
+# When running as a packaged desktop app (PyInstaller .exe), the program
+# files live in a temporary, read-only folder, so user data must be written
+# to a persistent, writable location instead. Normal dev / server runs keep
+# using the project's own "data" folder exactly as before.
+if getattr(sys, "frozen", False):
+    DATA_DIR = (
+        Path(
+            os.environ.get("LOCALAPPDATA")
+            or os.environ.get("APPDATA")
+            or Path.home()
+        )
+        / "ProjectTracker"
+    )
+else:
+    DATA_DIR = BASE_DIR / "data"
+
+(DATA_DIR / "db").mkdir(parents=True, exist_ok=True)
 
 ALLOWED_HOSTS = env.list(
     "ALLOWED_HOSTS", default=["tracker.todiane.com", "127.0.0.1"]
@@ -34,7 +54,7 @@ DEBUG = env.bool("DEBUG", default=False)
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "data" / "db" / "db.sqlite3",
+        "NAME": DATA_DIR / "db" / "db.sqlite3",
     }
 }
 
@@ -52,6 +72,9 @@ INSTALLED_APPS = [
     "crm",
     "core",
     "pages",
+    "assets",
+    "products",
+    "sequences",
 ]
 
 MIDDLEWARE = [
@@ -122,11 +145,22 @@ STATICFILES_DIRS = [
 
 # Media files configuration
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+if getattr(sys, "frozen", False):
+    MEDIA_ROOT = os.path.join(DATA_DIR, "media")
+else:
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+os.makedirs(MEDIA_ROOT, exist_ok=True)
 
 
 # WhiteNoise configuration
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+# Desktop (PyWebView) mode: let WhiteNoise serve static files directly from
+# the source folders via the staticfiles finders, so the packaged app works
+# even if collectstatic hasn't been run.
+if os.environ.get("TRACKER_DESKTOP") == "1":
+    WHITENOISE_USE_FINDERS = True
+    WHITENOISE_AUTOREFRESH = True
 
 
 # -----------------------------------------------------------------------------
@@ -149,6 +183,15 @@ FOLLOWUP_REMINDER_TO = env("FOLLOWUP_REMINDER_TO", default="dcorriette@gmail.com
 
 # Who receives the daily "still open today" reminder (see daily_reminder command)
 DAILY_REMINDER_TO = env("DAILY_REMINDER_TO", default="dcorriette@gmail.com")
+
+
+# -----------------------------------------------------------------------------
+# AI generation (used by the assets app to turn source material into content)
+# -----------------------------------------------------------------------------
+# Not set by default — generation features show a clear error until this is
+# added to your .env file. Nothing else in the site depends on it.
+ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default="")
+ANTHROPIC_DEFAULT_MODEL = env("ANTHROPIC_DEFAULT_MODEL", default="claude-sonnet-4-5")
 
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

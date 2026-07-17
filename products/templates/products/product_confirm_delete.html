@@ -1,0 +1,17 @@
+<!-- products/templates/products/product_confirm_delete.html -->
+{% extends 'base.html' %}
+{% block title %}Delete {{ object.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-md">
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h1 class="text-xl font-bold text-gray-800 mb-4">Delete "{{ object.name }}"?</h1>
+        <p class="text-gray-600 mb-6">This also deletes its funnel steps. Sale records are kept but lose the link to this product.</p>
+        <form method="post" class="flex justify-end gap-2">
+            {% csrf_token %}
+            <a href="{% url 'products:detail' object.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded">Cancel</a>
+            <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
