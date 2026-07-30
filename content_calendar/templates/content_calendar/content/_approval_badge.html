@@ -1,0 +1,8 @@
+{% comment %}Approval status pill. Expects `status` (draft|ready|approved|changes).{% endcomment %}
+<span class="px-2 py-0.5 text-xs rounded-full whitespace-nowrap
+    {% if status == 'draft' %}bg-gray-100 text-gray-700
+    {% elif status == 'ready' %}bg-yellow-100 text-yellow-800
+    {% elif status == 'approved' %}bg-green-100 text-green-800
+    {% elif status == 'changes' %}bg-red-100 text-red-800{% endif %}">
+    {% if status == 'draft' %}Draft{% elif status == 'ready' %}Ready for Approval{% elif status == 'approved' %}Approved{% elif status == 'changes' %}Needs Changes{% endif %}
+</span>

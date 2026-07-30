@@ -28,6 +28,9 @@ urlpatterns = [
     path("pages/", include("pages.urls")),
     path("assets/", include("assets.urls")),
     path("products/", include("products.urls")),
+    path("content/", include("content_calendar.urls")),
+    path("ai-settings/", include("ai_settings.urls")),
+    path("assistant/", include("ai_assistant.urls")),
     # login redirection
     path("accounts/login/", redirect_to_admin_login, name="login"),
     path(

@@ -48,6 +48,14 @@
         <p class="font-bold">Site is currently in maintenance mode. Some features may be unavailable.</p>
     </div>
     {% endif %}
+
+    <!-- One-time note after auto-connecting to Claude Desktop. Clears itself as
+         soon as the user navigates anywhere (the ?claude flag is dropped). -->
+    {% if request.GET.claude == 'connected' %}
+    <div class="bg-emerald-600 text-white text-center py-2 px-4 text-sm">
+        ✅ Connected to <strong>Claude Desktop</strong>. Fully quit and reopen Claude Desktop once to finish — then ask it <em>“What content do I have scheduled this week?”</em>
+    </div>
+    {% endif %}
     
     <!-- Navigation -->
     <nav class="bg-slate-50 text-slate-800 border-b border-slate-200">
@@ -63,10 +71,13 @@
                     <div class="hidden md:flex space-x-4">
                         <a href="{% url 'projects:project_list' %}" class="text-slate-600 hover:text-slate-900">Projects</a>
                         <a href="{% url 'projects:task_table' %}" class="text-slate-600 hover:text-slate-900">Tasks</a>
+                        <a href="{% url 'content_calendar:content_calendar' %}" class="text-slate-600 hover:text-slate-900">Content</a>
+                        <a href="{% url 'ai_assistant:chat' %}" class="text-slate-600 hover:text-slate-900">Assistant</a>
                         <a href="{% url 'crm:contact_list' %}" class="text-slate-600 hover:text-slate-900">CRM</a>
                         <a href="{% url 'assets:list' %}" class="text-slate-600 hover:text-slate-900">Assets</a>
                         <a href="{% url 'products:list' %}" class="text-slate-600 hover:text-slate-900">Products</a>
                         <a href="{% url 'core:settings' %}" class="text-slate-600 hover:text-slate-900">Settings</a>
+                        <a href="{% url 'ai_settings:settings' %}" class="text-slate-600 hover:text-slate-900">AI</a>
                         <!-- Add more navigation links as needed -->
                     </div>
                 </div>

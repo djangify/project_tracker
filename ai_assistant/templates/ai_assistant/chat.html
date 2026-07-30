@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+{% block title %}Assistant - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="flex items-center justify-between mb-4">
+        <h1 class="text-3xl font-bold text-gray-900">Assistant</h1>
+        <form method="post" action="{% url 'ai_assistant:clear' %}">
+            {% csrf_token %}
+            <button type="submit" class="text-sm text-gray-500 hover:text-gray-800">Clear chat</button>
+        </form>
+    </div>
+
+    <div class="bg-gray-50 border border-gray-200 rounded-lg flex flex-col" style="height: 65vh;">
+        <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-3">
+            {% include "ai_assistant/_messages.html" %}
+        </div>
+
+        <form id="chat-form" class="border-t border-gray-200 p-3 flex items-end gap-2 bg-white rounded-b-lg">
+            {% csrf_token %}
+            <textarea id="chat-input" name="message" rows="1" placeholder="Message the assistant…"
+                      class="flex-1 resize-none border border-gray-300 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+            <button type="submit" id="chat-send"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-md disabled:opacity-50">Send</button>
+        </form>
+    </div>
+    <p class="text-xs text-gray-400 mt-2">Try: “Give me 5 August Instagram post ideas about summer skincare” or “Move item 3 to next Friday”.</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("chat-input");
+    const sendBtn = document.getElementById("chat-send");
+    const messages = document.getElementById("chat-messages");
+    const csrftoken = form.querySelector("[name=csrfmiddlewaretoken]").value;
+
+    function scrollDown() { messages.scrollTop = messages.scrollHeight; }
+    scrollDown();
+
+    function appendUserBubble(text) {
+        const wrap = document.createElement("div");
+        wrap.className = "flex justify-end";
+        wrap.innerHTML = '<div class="max-w-[80%] bg-indigo-600 text-white rounded-2xl rounded-br-sm px-4 py-2 text-sm whitespace-pre-wrap"></div>';
+        wrap.firstChild.textContent = text;
+        messages.appendChild(wrap);
+    }
+
+    function appendThinking() {
+        const wrap = document.createElement("div");
+        wrap.id = "thinking";
+        wrap.className = "flex justify-start";
+        wrap.innerHTML = '<div class="bg-white border border-gray-200 text-gray-400 rounded-2xl rounded-bl-sm px-4 py-2 text-sm">Thinking…</div>';
+        messages.appendChild(wrap);
+    }
+
+    async function send() {
+        const text = input.value.trim();
+        if (!text) return;
+        input.value = "";
+        input.style.height = "auto";
+        sendBtn.disabled = true;
+        appendUserBubble(text);
+        appendThinking();
+        scrollDown();
+
+        try {
+            const body = new FormData();
+            body.append("message", text);
+            const resp = await fetch("{% url 'ai_assistant:send' %}", {
+                method: "POST",
+                headers: { "X-CSRFToken": csrftoken },
+                body: body,
+            });
+            messages.innerHTML = await resp.text();
+        } catch (e) {
+            const t = document.getElementById("thinking");
+            if (t) t.querySelector("div").textContent = "Request failed. Try again.";
+        } finally {
+            sendBtn.disabled = false;
+            scrollDown();
+            input.focus();
+        }
+    }
+
+    form.addEventListener("submit", function (e) { e.preventDefault(); send(); });
+    // Enter to send, Shift+Enter for newline.
+    input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    // Auto-grow the textarea.
+    input.addEventListener("input", function () {
+        input.style.height = "auto";
+        input.style.height = Math.min(input.scrollHeight, 120) + "px";
+    });
+})();
+</script>
+{% endblock %}

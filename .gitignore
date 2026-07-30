@@ -57,3 +57,7 @@ data/
 data/db
 data/logs
 
+# --- Local planning / prompt notes (not part of the product) ---
+CLAUDE_CODE_KICKOFF_PROMPT.md
+CONTENT_OS_BUILD_PLAN.md
+

@@ -75,6 +75,9 @@ INSTALLED_APPS = [
     "assets",
     "products",
     "sequences",
+    "content_calendar",
+    "ai_settings",
+    "ai_assistant",
 ]
 
 MIDDLEWARE = [
