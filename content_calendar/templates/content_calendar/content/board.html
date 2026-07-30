@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Content board - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Content</h1>
+    {% include "content_calendar/content/_toolbar.html" %}
+
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {% for col in columns %}
+        <div class="bg-gray-50 rounded-lg p-3">
+            <h2 class="text-sm font-semibold text-gray-700 mb-3 flex items-center justify-between">
+                <span>{{ col.label }}</span>
+                <span class="text-gray-400 font-normal">{{ col.items|length }}</span>
+            </h2>
+            <div class="space-y-2">
+                {% for item in col.items %}
+                <div class="bg-white rounded-md shadow-sm border border-gray-200 p-3">
+                    <a href="{% url 'content_calendar:content_edit' item.id %}" class="text-sm text-gray-900 hover:text-indigo-700">{{ item }}</a>
+                    <div class="flex items-center justify-between mt-2">
+                        <span class="text-xs text-gray-500">{% if item.project %}{{ item.project.name }}{% else %}—{% endif %}</span>
+                        {% if item.scheduled_date %}
+                        <span class="text-xs {% if item.is_overdue %}text-red-600{% else %}text-gray-500{% endif %}">{{ item.scheduled_date|date:"M d" }}</span>
+                        {% endif %}
+                    </div>
+                    <select data-approval="{% url 'content_calendar:content_set_approval' item.id %}"
+                            class="mt-2 w-full text-xs bg-gray-50 border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        {% for value, label in approval_choices %}
+                        <option value="{{ value }}" {% if item.approval_status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% empty %}
+                <p class="text-xs text-gray-400 text-center py-4">Nothing here.</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    function getCookie(name) {
+        const m = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
+        return m ? m.pop() : "";
+    }
+    const csrftoken = getCookie("csrftoken");
+    document.querySelectorAll("[data-approval]").forEach((sel) => {
+        sel.addEventListener("change", async function () {
+            const resp = await fetch(sel.dataset.approval, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
+                body: JSON.stringify({ status: sel.value }),
+            });
+            if (resp.ok) window.location.reload();
+        });
+    });
+})();
+</script>
+{% endblock %}

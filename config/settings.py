@@ -75,6 +75,7 @@ INSTALLED_APPS = [
     "assets",
     "products",
     "sequences",
+    "content_calendar",
 ]
 
 MIDDLEWARE = [

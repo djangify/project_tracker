@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Content - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">Content</h1>
+    {% include "content_calendar/content/_toolbar.html" %}
+
+    <div class="bg-white rounded-lg shadow overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Scheduled</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Topic</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Type</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Platforms</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                    <th class="px-4 py-3 text-left font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">Approval</th>
+                    <th class="px-4 py-3 text-right font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"></th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for item in items %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-4 py-2 whitespace-nowrap {% if item.is_overdue %}text-red-600 font-medium{% else %}text-gray-600{% endif %}">
+                        {% if item.scheduled_date %}{{ item.scheduled_date|date:"M d, Y" }}{% else %}<span class="text-gray-300">—</span>{% endif %}
+                    </td>
+                    <td class="px-4 py-2 text-gray-900">
+                        <a href="{% url 'content_calendar:content_edit' item.id %}" class="hover:text-indigo-700">{{ item }}</a>
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-gray-600">{{ item.get_content_type_display|default:"—" }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-gray-600">
+                        {% for p in item.platforms.all %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% empty %}<span class="text-gray-300">—</span>{% endfor %}
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-gray-600">{{ item.get_status_display }}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">
+                        {% include "content_calendar/content/_approval_badge.html" with status=item.approval_status %}
+                    </td>
+                    <td class="px-4 py-2 whitespace-nowrap text-right">
+                        <a href="{% url 'content_calendar:content_edit' item.id %}" class="text-indigo-600 hover:text-indigo-800">Edit</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" class="px-4 py-8 text-center text-gray-400">No content{% if current_project %} for {{ current_project.name }}{% endif %} yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
