@@ -1,130 +1,50 @@
 # assets/services.py
-"""AI generation service. Turns one or more Assets (plus an optional
-VoiceProfile) into a piece of content, guided by a PromptTemplate — one
-synchronous call to whichever AI provider is configured in Settings
-(Anthropic, OpenAI, or Google Gemini). No background queue: if generation
-calls start taking long enough to need one, this is the seam to add it at
-(swap the body of generate_content for a task enqueue + GenerationJob poll).
+"""AI generation service for the assets app.
+
+Turns one or more Assets (plus an optional VoiceProfile) into content, guided by
+a PromptTemplate, and distils VoiceProfiles from their source assets.
+
+Every model call goes through ai_settings.ai_client — the single, provider-
+agnostic adapter (OpenAI / Anthropic / Gemini), configured in AI Settings with
+the API key encrypted at rest. This module keeps its own GenerationError type so
+the existing views/UX are unchanged; ai_client's config errors are translated
+into it.
 """
 import json
-import os
+import re
 
-from django.conf import settings
-
-DEFAULT_MODELS = {
-    "anthropic": "claude-sonnet-4-5",
-    "openai": "gpt-4o",
-    "gemini": "gemini-2.0-flash",
-}
+from ai_settings import ai_client
 
 
 class GenerationError(Exception):
     """Raised when the AI call can't be made or fails in an expected way
-    (missing key, missing package, bad response) — caught and shown to the
-    user as a message rather than a 500."""
+    (no active provider/key, bad response) — caught and shown to the user as a
+    message rather than a 500."""
 
 
-def _site_config():
-    """Lazy import to avoid a hard dependency on core at module load time."""
-    from core.models import SiteConfiguration
-
-    return SiteConfiguration.objects.filter(pk=1).first()
-
-
-def _provider():
-    config = _site_config()
-    if config and config.ai_provider:
-        return config.ai_provider
-    return getattr(settings, "AI_PROVIDER", "") or os.environ.get("AI_PROVIDER", "anthropic")
-
-
-def _api_key():
-    """The dashboard (Settings page) is the primary source — it's what works
-    identically in the packaged desktop app and in dev. The environment
-    variable is a fallback for local/server development only."""
-    config = _site_config()
-    if config and config.ai_api_key:
-        return config.ai_api_key
-    return getattr(settings, "AI_API_KEY", "") or os.environ.get("AI_API_KEY", "")
-
-
-def _model_name():
-    config = _site_config()
-    if config and config.ai_model:
-        return config.ai_model
-    env_model = getattr(settings, "AI_MODEL", "") or os.environ.get("AI_MODEL", "")
-    if env_model:
-        return env_model
-    return DEFAULT_MODELS.get(_provider(), DEFAULT_MODELS["anthropic"])
-
-
-def _call_ai(system_prompt, user_prompt, max_tokens):
-    """Dispatches to whichever provider is configured and returns the plain
-    text response. This is the one place that knows about each provider's
-    SDK — generate_content() and distill_voice_profile() don't care which
-    provider is in use."""
-    provider = _provider()
-    api_key = _api_key()
-    if not api_key:
-        raise GenerationError(
-            "No AI API key configured. Add one in Settings (the sidebar) to enable AI generation."
-        )
-    model = _model_name()
-
-    if provider == "anthropic":
-        return _call_anthropic(api_key, model, system_prompt, user_prompt, max_tokens)
-    if provider == "openai":
-        return _call_openai(api_key, model, system_prompt, user_prompt, max_tokens)
-    if provider == "gemini":
-        return _call_gemini(api_key, model, system_prompt, user_prompt, max_tokens)
-    raise GenerationError(f"Unknown AI provider '{provider}'. Choose one in Settings.")
-
-
-def _call_anthropic(api_key, model, system_prompt, user_prompt, max_tokens):
+def _generate(system_prompt, user_prompt, temperature=0.7):
     try:
-        import anthropic
-    except ImportError as exc:
-        raise GenerationError("The 'anthropic' package isn't installed. Run: pip install anthropic") from exc
-    client = anthropic.Anthropic(api_key=api_key)
-    response = client.messages.create(
-        model=model,
-        max_tokens=max_tokens,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
-    )
-    return response.content[0].text
+        return ai_client.generate(system_prompt, user_prompt, temperature)
+    except ai_client.AIConfigError as exc:
+        raise GenerationError(f"{exc} Set one up in AI Settings.") from exc
 
 
-def _call_openai(api_key, model, system_prompt, user_prompt, max_tokens):
+def _extract_json(raw):
+    """Parse a JSON object out of a model reply, tolerating markdown fences."""
+    if not raw:
+        return {}
+    fenced = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", raw, re.DOTALL)
+    candidate = fenced.group(1) if fenced else raw
     try:
-        import openai
-    except ImportError as exc:
-        raise GenerationError("The 'openai' package isn't installed. Run: pip install openai") from exc
-    client = openai.OpenAI(api_key=api_key)
-    response = client.chat.completions.create(
-        model=model,
-        max_tokens=max_tokens,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
-    return response.choices[0].message.content
-
-
-def _call_gemini(api_key, model, system_prompt, user_prompt, max_tokens):
-    try:
-        import google.generativeai as genai
-    except ImportError as exc:
-        raise GenerationError(
-            "The 'google-generativeai' package isn't installed. Run: pip install google-generativeai"
-        ) from exc
-    genai.configure(api_key=api_key)
-    gmodel = genai.GenerativeModel(model_name=model, system_instruction=system_prompt or None)
-    response = gmodel.generate_content(
-        user_prompt, generation_config={"max_output_tokens": max_tokens}
-    )
-    return response.text
+        return json.loads(candidate)
+    except json.JSONDecodeError:
+        brace = re.search(r"\{.*\}", candidate, re.DOTALL)
+        if brace:
+            try:
+                return json.loads(brace.group(0))
+            except json.JSONDecodeError:
+                return {}
+        return {}
 
 
 def build_prompt(assets, voice_profile=None, instructions=""):
@@ -166,7 +86,7 @@ def generate_content(job):
 
     user_prompt = build_prompt(assets, job.voice_profile, job.instructions)
     system_prompt = job.prompt_template.system_prompt if job.prompt_template else ""
-    return _call_ai(system_prompt, user_prompt, max_tokens=4000)
+    return _generate(system_prompt, user_prompt, temperature=0.7)
 
 
 def distill_voice_profile(voice_profile):
@@ -186,11 +106,10 @@ def distill_voice_profile(voice_profile):
         "sample_paragraphs (list of 2-3 short paragraphs distilled from the samples), "
         "do_notes (list of strings), dont_notes (list of strings). No prose outside the JSON."
     )
-    raw = _call_ai(system_prompt, sample_text, max_tokens=2000)
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError as exc:
-        raise GenerationError("The AI didn't return valid JSON — try again.") from exc
+    raw = _generate(system_prompt, sample_text, temperature=0.4)
+    data = _extract_json(raw)
+    if not data:
+        raise GenerationError("The AI didn't return valid JSON — try again.")
 
     voice_profile.summary = data.get("summary", "")
     voice_profile.tone_words = data.get("tone_words", [])

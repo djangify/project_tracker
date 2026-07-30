@@ -14,8 +14,9 @@ import json
 import re
 
 from ai_settings import ai_client
+from assets.models import VoiceProfile  # the single, shared voice profile
 
-from .models import ContentItem, VoiceProfile
+from .models import ContentItem
 
 
 # ---------------------------------------------------------------------------
@@ -97,7 +98,9 @@ class PromptEnhancer:
     @classmethod
     def voice_block(cls, voice: VoiceProfile | None) -> str:
         """Render the distilled voice profile as system-prompt guidance."""
-        if not voice or not voice.enabled or not voice.is_distilled:
+        # Applied when the profile is the active one and has actually been
+        # distilled (has some learned content).
+        if not voice or not voice.is_active or not (voice.summary or voice.tone_words):
             return ""
         parts = ["\n\nWrite in this specific brand voice:"]
         if voice.summary:
@@ -171,13 +174,21 @@ def _extract_json(raw: str) -> dict:
 _VALID_SENTENCE_LENGTHS = {"short", "medium", "long", "varied"}
 
 
+def active_voice() -> VoiceProfile | None:
+    """The voice profile applied to generation, or None."""
+    return VoiceProfile.objects.filter(is_active=True).first()
+
+
 def distill_voice(sample_text: str, temperature: float = 0.4) -> VoiceProfile:
-    """Distill writing samples into the singleton VoiceProfile and save it."""
+    """Distill pasted writing samples into the active shared VoiceProfile
+    (creating one if there isn't an active profile yet) and save it."""
     raw = ai_client.generate(VOICE_DISTILL_SYSTEM,
                              f"Writing samples:\n\n{sample_text}", temperature)
     data = _extract_json(raw)
 
-    voice = VoiceProfile.get_solo()
+    voice = active_voice()
+    if voice is None:
+        voice = VoiceProfile(name="My voice")
     voice.summary = data.get("summary", "") or ""
     voice.tone_words = data.get("tone_words", []) or []
     sentence_length = (data.get("sentence_length") or "varied").lower()
@@ -186,9 +197,10 @@ def distill_voice(sample_text: str, temperature: float = 0.4) -> VoiceProfile:
     voice.sample_paragraphs = data.get("sample_paragraphs", []) or []
     voice.do_notes = data.get("do_notes", []) or []
     voice.dont_notes = data.get("dont_notes", []) or []
-    voice.raw_response = raw
-    voice.mark_distilled()
+    voice.is_active = True
     voice.save()
+    # Keep a single active profile.
+    VoiceProfile.objects.exclude(pk=voice.pk).update(is_active=False)
     return voice
 
 
@@ -210,7 +222,7 @@ Return only the JSON, no preamble."""
 
 
 def _apply_voice_to_system(system: str) -> str:
-    return system + PromptEnhancer.voice_block(VoiceProfile.objects.filter(pk=1).first())
+    return system + PromptEnhancer.voice_block(active_voice())
 
 
 def generate_from_brief(brief: str, content_type: str = "", temperature: float = 0.7) -> dict:
@@ -223,7 +235,7 @@ def generate_from_brief(brief: str, content_type: str = "", temperature: float =
 def generate_from_template(template, brief: str = "", temperature: float = 0.7) -> dict:
     """Run a template's prompts in order, feeding each result forward, and
     return a dict of {ContentItem field: generated value}."""
-    voice = VoiceProfile.objects.filter(pk=1).first()
+    voice = active_voice()
     content_type = PromptEnhancer.category_for(template.content_type)
     keywords = f"\n\nKeywords to weave in: {template.keywords}" if template.keywords else ""
 

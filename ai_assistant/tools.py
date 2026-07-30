@@ -155,11 +155,12 @@ def distill_voice(samples):
         raise ToolError("samples text is required")
     voice = generation.distill_voice(samples)
     return {
+        "name": voice.name,
         "summary": voice.summary,
         "tone_words": voice.tone_words,
         "sentence_length": voice.sentence_length,
         "words_to_avoid": voice.words_to_avoid,
-        "enabled": voice.enabled,
+        "is_active": voice.is_active,
     }
 
 

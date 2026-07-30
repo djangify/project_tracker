@@ -14,17 +14,11 @@
     <div class="mb-6 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">Voice profile updated.</div>
     {% endif %}
 
-    {% if voice.is_distilled %}
+    {% if voice %}
     <div class="bg-white shadow-md rounded-lg p-6 mb-6">
         <div class="flex items-center justify-between mb-3">
-            <h2 class="text-lg font-semibold text-gray-900">Current voice</h2>
-            <form method="post">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="toggle">
-                <button type="submit" class="text-sm {% if voice.enabled %}text-green-700{% else %}text-gray-400{% endif %} hover:underline">
-                    {% if voice.enabled %}● Enabled (click to disable){% else %}○ Disabled (click to enable){% endif %}
-                </button>
-            </form>
+            <h2 class="text-lg font-semibold text-gray-900">Active voice: {{ voice.name }}</h2>
+            <a href="{% url 'assets:voice_list' %}" class="text-sm text-indigo-600 hover:text-indigo-800">Manage voices →</a>
         </div>
         {% if voice.summary %}<p class="text-sm text-gray-700 mb-2">{{ voice.summary }}</p>{% endif %}
         {% if voice.tone_words %}<p class="text-sm text-gray-600"><span class="font-medium">Tone:</span> {{ voice.tone_words|join:", " }}</p>{% endif %}
@@ -34,7 +28,7 @@
     {% endif %}
 
     <div class="bg-white shadow-md rounded-lg p-6">
-        <h2 class="text-lg font-semibold text-gray-900 mb-4">{% if voice.is_distilled %}Re-distil from new samples{% else %}Distil your voice{% endif %}</h2>
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">{% if voice %}Re-distil from new samples{% else %}Distil your voice{% endif %}</h2>
         <form method="post" class="space-y-4">
             {% csrf_token %}
             {% if form.non_field_errors %}

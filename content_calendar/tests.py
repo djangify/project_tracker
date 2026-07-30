@@ -7,13 +7,14 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
+from assets.models import VoiceProfile  # the shared voice profile
+
 from . import generation
 from .models import (
     ContentItem,
     ContentTemplate,
     ContentTemplatePrompt,
     Platform,
-    VoiceProfile,
 )
 
 
@@ -102,24 +103,29 @@ class PromptEnhancerTests(TestCase):
         self.assertIn("social media", system.lower())
         self.assertIn("write a hook", user)
 
-    def test_voice_block_included_when_enabled(self):
-        voice = VoiceProfile.get_solo()
-        voice.summary = "warm and direct"
-        voice.tone_words = ["friendly", "bold"]
-        voice.mark_distilled()
-        voice.save()
+    def test_voice_block_included_when_active(self):
+        voice = VoiceProfile.objects.create(
+            name="mine", is_active=True,
+            summary="warm and direct", tone_words=["friendly", "bold"],
+        )
         block = generation.PromptEnhancer.voice_block(voice)
         self.assertIn("warm and direct", block)
         self.assertIn("friendly", block)
 
     def test_voice_block_empty_when_not_distilled(self):
-        voice = VoiceProfile.get_solo()  # not distilled
+        voice = VoiceProfile.objects.create(name="mine", is_active=True)  # no content
+        self.assertEqual(generation.PromptEnhancer.voice_block(voice), "")
+
+    def test_voice_block_empty_when_inactive(self):
+        voice = VoiceProfile.objects.create(
+            name="mine", is_active=False, summary="warm", tone_words=["bold"],
+        )
         self.assertEqual(generation.PromptEnhancer.voice_block(voice), "")
 
 
 class DistillVoiceTests(TestCase):
     @patch("content_calendar.generation.ai_client.generate")
-    def test_distill_saves_singleton(self, mock_generate):
+    def test_distill_saves_active_voice(self, mock_generate):
         mock_generate.return_value = json.dumps({
             "summary": "punchy and warm",
             "tone_words": ["bold", "warm"],
@@ -130,11 +136,10 @@ class DistillVoiceTests(TestCase):
             "dont_notes": ["don't ramble"],
         })
         voice = generation.distill_voice("some writing samples")
-        self.assertEqual(voice.pk, 1)
         self.assertEqual(voice.summary, "punchy and warm")
         self.assertEqual(voice.sentence_length, "short")
-        self.assertTrue(voice.is_distilled)
-        self.assertEqual(VoiceProfile.objects.count(), 1)
+        self.assertTrue(voice.is_active)
+        self.assertEqual(VoiceProfile.objects.filter(is_active=True).count(), 1)
 
     @patch("content_calendar.generation.ai_client.generate")
     def test_distill_defaults_bad_sentence_length(self, mock_generate):

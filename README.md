@@ -34,8 +34,9 @@ desktop app (`.exe`).
 - **Email sequences** — drip sequences of steps with per-step delays and
   enrollments.
 - **Assets** — a library of source material (upload a file or paste text /
-  transcripts), with prompt templates, a voice profile, and generation jobs for
-  turning that material into content.
+  transcripts), with prompt templates and generation jobs for turning that
+  material into content, using the same shared voice profile and AI provider as
+  the content calendar.
 
 ### Content calendar
 
@@ -53,9 +54,13 @@ desktop app (`.exe`).
 - **AI provider settings** — pick **OpenAI**, **Anthropic (Claude)** or **Google
   Gemini** and swap between them without touching code. Your API key is
   **encrypted at rest** (Fernet, derived from `SECRET_KEY`), never stored in
-  plain text. A "test connection" button confirms it works.
-- **Voice profile** — paste a few samples of your own writing and the app
-  distils a reusable voice so generated content sounds like you.
+  plain text. A "test connection" button confirms it works. **One** setting
+  drives every AI feature (assets generation, content generation, the assistant,
+  and the MCP tools).
+- **Voice profile** — distil a reusable voice from your own writing (paste
+  samples in the content tools, or from saved assets under Assets). It's a single
+  shared voice profile, applied wherever content is generated so it sounds like
+  you.
 - **Content templates** — named recipes (e.g. "Instagram carousel") that produce
   a content item's fields (hook → caption → CTA → hashtags) in one ordered run.
 - **Generate panel** — pick a template or write a brief, choose a date, and get a

@@ -6,7 +6,6 @@ from .models import (
     ContentTemplate,
     ContentTemplatePrompt,
     Platform,
-    VoiceProfile,
 )
 
 
@@ -54,8 +53,3 @@ class ContentTemplateAdmin(admin.ModelAdmin):
     search_fields = ("name", "description", "keywords")
     filter_horizontal = ("default_platforms",)
     inlines = [ContentTemplatePromptInline]
-
-
-@admin.register(VoiceProfile)
-class VoiceProfileAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "enabled", "sentence_length", "distilled_at")

@@ -152,11 +152,8 @@ class DashboardView(LoginRequiredMixin, TemplateView):
 
 
 class SettingsView(LoginRequiredMixin, UpdateView):
-    """
-    In-app settings page — the AI key lives here (not an environment
-    variable) so it works identically in the packaged desktop app and in
-    dev, and so it's editable without touching a config file.
-    """
+    """In-app site settings. AI provider/key setup lives on its own page
+    ("AI Settings"), where the key is encrypted at rest."""
 
     model = SiteConfiguration
     template_name = "core/settings.html"
@@ -164,9 +161,6 @@ class SettingsView(LoginRequiredMixin, UpdateView):
         "site_name",
         "site_description",
         "contact_email",
-        "ai_provider",
-        "ai_api_key",
-        "ai_model",
     ]
     success_url = reverse_lazy("core:settings")
 

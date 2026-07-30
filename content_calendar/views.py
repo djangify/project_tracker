@@ -18,9 +18,11 @@ from ai_settings import ai_client
 
 from projects.models import Project
 
+from assets.models import VoiceProfile
+
 from . import generation
 from .forms import ContentItemForm, GenerateForm, VoiceProfileForm
-from .models import ContentItem, Platform, VoiceProfile
+from .models import ContentItem, Platform
 from .serializers import ContentItemSerializer, PlatformSerializer
 
 
@@ -235,34 +237,32 @@ class GenerateView(LoginRequiredMixin, View):
 
 
 class VoiceProfileView(LoginRequiredMixin, View):
+    """Paste writing samples to distil the shared active voice profile (the same
+    VoiceProfile the Assets app manages). Full management lives under Assets."""
+
     template_name = "content_calendar/content/voice_profile.html"
 
+    @staticmethod
+    def _active_voice():
+        return VoiceProfile.objects.filter(is_active=True).first()
+
     def get(self, request, *args, **kwargs):
-        return render(request, self.template_name, {
-            "form": VoiceProfileForm(),
-            "voice": VoiceProfile.get_solo(),
-        })
+        return render(request, self.template_name,
+                     {"form": VoiceProfileForm(), "voice": self._active_voice()})
 
     def post(self, request, *args, **kwargs):
-        # Toggle enable/disable without re-distilling.
-        if request.POST.get("action") == "toggle":
-            voice = VoiceProfile.get_solo()
-            voice.enabled = not voice.enabled
-            voice.save(update_fields=["enabled", "updated_at"])
-            return redirect(reverse("content_calendar:voice_profile"))
-
         form = VoiceProfileForm(request.POST)
         if not form.is_valid():
-            return render(request, self.template_name, {"form": form, "voice": VoiceProfile.get_solo()})
+            return render(request, self.template_name, {"form": form, "voice": self._active_voice()})
 
         try:
             voice = generation.distill_voice(form.cleaned_data["sample_text"])
         except ai_client.AIConfigError as exc:
             form.add_error(None, f"{exc} Set one up in AI Settings.")
-            return render(request, self.template_name, {"form": form, "voice": VoiceProfile.get_solo()})
+            return render(request, self.template_name, {"form": form, "voice": self._active_voice()})
         except Exception as exc:  # noqa: BLE001
             form.add_error(None, f"Distillation failed: {type(exc).__name__}: {exc}")
-            return render(request, self.template_name, {"form": form, "voice": VoiceProfile.get_solo()})
+            return render(request, self.template_name, {"form": form, "voice": self._active_voice()})
 
         return render(request, self.template_name,
                      {"form": VoiceProfileForm(), "voice": voice, "distilled": True})
