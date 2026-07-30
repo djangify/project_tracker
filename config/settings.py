@@ -77,6 +77,7 @@ INSTALLED_APPS = [
     "sequences",
     "content_calendar",
     "ai_settings",
+    "ai_assistant",
 ]
 
 MIDDLEWARE = [
