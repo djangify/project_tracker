@@ -8,13 +8,31 @@ It's the same tools the in-app Assistant uses, exposed over MCP's **stdio**
 transport. Because it's a single-user local install, there's nothing to host and
 no auth token to manage: Claude launches the server as a subprocess on demand.
 
-## What it needs
+## Requirements
 
+- **The Claude Desktop app, installed and signed in.** This connector works with
+  Claude Desktop (it launches the server on your own machine). It does **not**
+  work from claude.ai in a web browser or on a phone — that would need a
+  publicly-hosted HTTPS version. Any Claude plan that supports MCP/custom
+  connectors will do.
 - This project installed and working (its virtualenv, its SQLite database).
 - The Python dependencies installed (`pip install -r requirements.txt`), which
   now include `mcp`.
-- An active AI provider configured in **AI Settings** — only required for the
-  `generate_draft` and `distill_voice` tools; the rest work without it.
+
+## Does this cost money? (API key vs. your Claude subscription)
+
+Managing your calendar through Claude Desktop runs on **your Claude
+subscription — no API key, no per-token cost.** The tools that list, create,
+move, edit and schedule content are just database operations.
+
+- **Free (no API key):** everything driven from Claude Desktop, *including
+  writing new content* — you ask Claude to write the captions and it saves them
+  with `create_content_item`. Claude does the writing on your subscription.
+- **Uses your API key (costs extra):** only the two buttons *inside the app* —
+  the **✨ Generate** panel and the **Assistant** chat page — plus the
+  `generate_draft` / `distill_voice` MCP tools, which call the provider directly.
+  Set a key up in **AI Settings** only if you want those. You can ignore them
+  entirely and let Claude Desktop do the writing for free.
 
 ## Run it manually (to check it starts)
 

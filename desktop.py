@@ -65,6 +65,38 @@ def _resource_path(rel: str) -> str:
     return str(Path(base) / rel)
 
 
+def _maybe_connect_claude(data_dir: Path) -> bool:
+    """On first launch, register this install with Claude Desktop (if present).
+
+    Runs at most once successfully — a marker file stops it re-adding an entry
+    the owner may have deliberately removed. If Claude Desktop isn't installed
+    yet, we don't write the marker, so a later install still gets picked up.
+    Returns True only when a connection was just made/updated. Never raises.
+    """
+    try:
+        marker = data_dir / ".claude_connected"
+        if marker.exists():
+            return False
+
+        from mcp_server.desktop_connect import connect
+
+        frozen = getattr(sys, "frozen", False)
+        base_dir = Path(__file__).resolve().parent
+        status = connect(base_dir, frozen)
+
+        if status in ("connected", "updated", "unchanged"):
+            try:
+                data_dir.mkdir(parents=True, exist_ok=True)
+                marker.write_text(status, encoding="utf-8")
+            except Exception:
+                pass
+            return status in ("connected", "updated")
+        # 'no-claude' or 'error': leave the marker off so we can retry next time.
+        return False
+    except Exception:
+        return False
+
+
 def _find_free_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -124,6 +156,11 @@ def main() -> None:
     except Exception as exc:  # pragma: no cover
         print(f"Could not seed example content: {exc}")
 
+    # Offer one-click Claude Desktop connection: register this install as an MCP
+    # server so the owner can drive the calendar from Claude. Returns True if it
+    # was just connected (so we can show a "restart Claude Desktop" note).
+    just_connected = _maybe_connect_claude(data_dir)
+
     # --- Start the web server in a background thread ---
     from waitress import serve
     from config.wsgi import application
@@ -131,6 +168,9 @@ def main() -> None:
     port = _find_free_port()
     host = "127.0.0.1"
     url = f"http://{host}:{port}/"
+    # Show the one-time "restart Claude Desktop to finish" banner via a URL flag
+    # that clears itself as soon as the user navigates anywhere.
+    initial_url = url + "?claude=connected" if just_connected else url
 
     server_thread = threading.Thread(
         target=lambda: serve(application, host=host, port=port, threads=8),
@@ -147,7 +187,7 @@ def main() -> None:
 
     webview.create_window(
         "Project Tracker",
-        url,
+        initial_url,
         width=1280,
         height=860,
         min_size=(900, 600),

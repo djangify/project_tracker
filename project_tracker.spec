@@ -6,8 +6,14 @@ Build from the project root, with the virtual environment active:
 
     pyinstaller project_tracker.spec
 
-Output: dist/ProjectTracker/ProjectTracker.exe  (a one-folder app -- ship the
-whole ProjectTracker folder)
+Output: dist/ProjectTracker/ with TWO executables:
+  - ProjectTracker.exe      the app window (windowed)
+  - ProjectTracker-mcp.exe  the MCP server for Claude Desktop (console — stdio
+                            needs real stdin/stdout, which a windowed exe lacks)
+
+Ship the whole ProjectTracker folder. Claude Desktop is pointed at
+ProjectTracker-mcp.exe automatically on first launch (see desktop.py /
+mcp_server/desktop_connect.py).
 """
 
 from PyInstaller.utils.hooks import collect_all, collect_submodules
@@ -29,7 +35,8 @@ for pkg in [
     "webview",
     "anthropic",
     "openai",
-    "google.generativeai",
+    "google.genai",   # new Google GenAI SDK (replaces google-generativeai)
+    "mcp",            # Model Context Protocol SDK (MCP server)
 ]:
     p_datas, p_binaries, p_hidden = collect_all(pkg)
     datas += p_datas
@@ -38,7 +45,10 @@ for pkg in [
 
 # Local Django apps + the project package. Django imports these by name at
 # runtime, so PyInstaller can't discover them by following imports alone.
-for pkg in ["config", "core", "crm", "pages", "projects", "assets", "products", "sequences"]:
+for pkg in [
+    "config", "core", "crm", "pages", "projects", "assets", "products",
+    "sequences", "content_calendar", "ai_settings", "ai_assistant", "mcp_server",
+]:
     hiddenimports += collect_submodules(pkg)
 
 # Project-level templates and static source files.
@@ -51,7 +61,10 @@ datas += [
 # expects <app>/templates/<app>/*.html on disk). collect_submodules() only
 # grabs .py files, so these non-Python assets have to be listed explicitly
 # or the packaged app 500s with TemplateDoesNotExist.
-for app in ["core", "crm", "pages", "projects", "assets", "products"]:
+for app in [
+    "core", "crm", "pages", "projects", "assets", "products",
+    "content_calendar", "ai_settings", "ai_assistant",
+]:
     datas += [(f"{app}/templates", f"{app}/templates")]
 
 # core/templatetags is a package but also gets used via {% load %} in
@@ -92,6 +105,27 @@ hiddenimports += [
     "products.views",
     "products.apps",
     "sequences.apps",
+    # --- Content OS apps (content calendar + AI settings/assistant + MCP) ---
+    "content_calendar.apps",
+    "content_calendar.urls",
+    "content_calendar.views",
+    "content_calendar.serializers",
+    "content_calendar.forms",
+    "content_calendar.generation",
+    "content_calendar.models",
+    "ai_settings.apps",
+    "ai_settings.urls",
+    "ai_settings.views",
+    "ai_settings.ai_client",
+    "ai_settings.encryption",
+    "ai_settings.models",
+    "ai_assistant.apps",
+    "ai_assistant.urls",
+    "ai_assistant.views",
+    "ai_assistant.agent",
+    "ai_assistant.tools",
+    "mcp_server.server",
+    "mcp_server.desktop_connect",
     "anthropic",
 ]
 
@@ -105,7 +139,8 @@ hiddenimports += [
 ]
 
 
-a = Analysis(
+# --- Analysis 1: the app window (entry point desktop.py) -------------------
+a_app = Analysis(
     ["desktop.py"],
     pathex=[],
     binaries=binaries,
@@ -117,12 +152,10 @@ a = Analysis(
     excludes=[],
     noarchive=False,
 )
-
-pyz = PYZ(a.pure)
-
-exe = EXE(
-    pyz,
-    a.scripts,
+pyz_app = PYZ(a_app.pure)
+exe_app = EXE(
+    pyz_app,
+    a_app.scripts,
     [],
     exclude_binaries=True,
     name="ProjectTracker",
@@ -139,10 +172,50 @@ exe = EXE(
     icon="static/images/favicon.ico",
 )
 
+# --- Analysis 2: the MCP server (entry point mcp_launcher.py) ---------------
+# Console subsystem: MCP stdio needs real stdin/stdout, which a windowed exe
+# does not have. Claude Desktop launches this with piped std handles.
+a_mcp = Analysis(
+    ["mcp_launcher.py"],
+    pathex=[],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    noarchive=False,
+)
+pyz_mcp = PYZ(a_mcp.pure)
+exe_mcp = EXE(
+    pyz_mcp,
+    a_mcp.scripts,
+    [],
+    exclude_binaries=True,
+    name="ProjectTracker-mcp",
+    debug=False,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+    icon="static/images/favicon.ico",
+)
+
+# Collect both executables and their (deduplicated) dependencies into one
+# shippable folder.
 coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
+    exe_app,
+    exe_mcp,
+    a_app.binaries,
+    a_app.datas,
+    a_mcp.binaries,
+    a_mcp.datas,
     strip=False,
     upx=True,
     upx_exclude=[],
