@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}AI Settings - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-3xl">
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">AI Settings</h1>
+    <p class="text-gray-500 mb-6">Add a key for each provider you use, then pick which one is active. Your keys are encrypted before they're stored.</p>
+
+    {% if saved %}
+    <div class="mb-6 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">Settings saved.</div>
+    {% endif %}
+
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+        {% for config in configs %}
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold text-gray-900">{{ config.get_provider_display }}</h2>
+                <label class="flex items-center gap-2 text-sm text-gray-700">
+                    <input type="radio" name="active_provider" value="{{ config.provider }}" {% if config.provider == active_provider %}checked{% endif %}>
+                    Active
+                </label>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="api_key_{{ config.provider }}" class="block text-sm font-medium text-gray-700">API key</label>
+                    <input type="password" name="api_key_{{ config.provider }}" id="api_key_{{ config.provider }}"
+                           autocomplete="off"
+                           placeholder="{% if config.has_key %}•••••••••• (saved — leave blank to keep){% else %}Paste your API key{% endif %}"
+                           class="mt-1 block w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="model_name_{{ config.provider }}" class="block text-sm font-medium text-gray-700">Model</label>
+                    <input type="text" name="model_name_{{ config.provider }}" id="model_name_{{ config.provider }}"
+                           value="{{ config.model_name }}"
+                           placeholder="{{ config.default_model }}"
+                           class="mt-1 block w-full border border-gray-300 rounded-md py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    <p class="text-xs text-gray-400 mt-1">Leave blank to use the default.</p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="flex items-center gap-3 pt-2">
+            <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Save settings</button>
+            <button type="button" id="test-connection" class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-800 font-semibold py-2 px-4 rounded">Test connection</button>
+            <span id="test-result" class="text-sm"></span>
+        </div>
+    </form>
+
+    <div id="test-output" class="mt-4 hidden rounded-md bg-gray-50 border border-gray-200 p-4 text-sm text-gray-800 whitespace-pre-wrap"></div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    function getCookie(name) {
+        const m = document.cookie.match("(^|;)\\s*" + name + "\\s*=\\s*([^;]+)");
+        return m ? m.pop() : "";
+    }
+    const btn = document.getElementById("test-connection");
+    const result = document.getElementById("test-result");
+    const output = document.getElementById("test-output");
+    if (!btn) return;
+
+    btn.addEventListener("click", async function () {
+        result.textContent = "Testing…";
+        result.className = "text-sm text-gray-500";
+        output.classList.add("hidden");
+        try {
+            const resp = await fetch("{% url 'ai_settings:test_connection' %}", {
+                method: "POST",
+                headers: { "X-CSRFToken": getCookie("csrftoken") },
+            });
+            const data = await resp.json();
+            if (data.ok) {
+                result.textContent = "✓ Connected";
+                result.className = "text-sm text-green-700 font-medium";
+                output.textContent = data.reply;
+                output.classList.remove("hidden");
+            } else {
+                result.textContent = "✗ " + data.error;
+                result.className = "text-sm text-red-700 font-medium";
+            }
+        } catch (e) {
+            result.textContent = "✗ Request failed";
+            result.className = "text-sm text-red-700 font-medium";
+        }
+    });
+})();
+</script>
+{% endblock %}

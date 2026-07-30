@@ -21,7 +21,7 @@ urllib3
 whitenoise
 anthropic
 openai
-google-generativeai
+google-genai
 
 # Desktop app (native window + production server for the bundled .exe)
 waitress
