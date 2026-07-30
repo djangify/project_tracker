@@ -1,5 +1,6 @@
 # content_calendar/models.py
 from django.db import models
+from django.utils import timezone
 
 from projects.models import Project
 
@@ -111,10 +112,109 @@ class ContentItem(models.Model):
 
     @property
     def is_overdue(self):
-        from django.utils import timezone
-
         return (
             self.scheduled_date is not None
             and self.status not in ("published", "archived")
             and self.scheduled_date < timezone.localdate()
         )
+
+
+# ---------------------------------------------------------------------------
+# Generation engine (Phase 3) — ported/adapted from ai-marketing
+# ---------------------------------------------------------------------------
+class VoiceProfile(models.Model):
+    """A structured 'brand voice' distilled from writing samples via one AI call.
+
+    Single-user, so this is a singleton (get via `VoiceProfile.get_solo()`).
+    When enabled and distilled, the generation engine layers it into the system
+    prompt so generated content sounds like the owner.
+    Ported from ai-marketing's content_generation.VoiceProfile.
+    """
+
+    SENTENCE_LENGTH_CHOICES = [
+        ("short", "Short & punchy"),
+        ("medium", "Medium"),
+        ("long", "Long & flowing"),
+        ("varied", "Varied"),
+    ]
+
+    summary = models.TextField(blank=True, default="", help_text="One or two sentence summary of the voice")
+    tone_words = models.JSONField(default=list, blank=True, help_text="List of tone/adjective words")
+    sentence_length = models.CharField(max_length=10, choices=SENTENCE_LENGTH_CHOICES, default="varied")
+    words_to_avoid = models.JSONField(default=list, blank=True, help_text="Words/phrases this voice never uses")
+    sample_paragraphs = models.JSONField(default=list, blank=True, help_text="2-3 distilled sample paragraphs")
+    do_notes = models.JSONField(default=list, blank=True, help_text="Do's for writing in this voice")
+    dont_notes = models.JSONField(default=list, blank=True, help_text="Don'ts for writing in this voice")
+    raw_response = models.TextField(blank=True, default="", help_text="Raw JSON returned by the model")
+    enabled = models.BooleanField(default=True, help_text="Apply this voice to generated content")
+    distilled_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return "Voice profile"
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(pk=1)
+        return obj
+
+    @property
+    def is_distilled(self):
+        return self.distilled_at is not None
+
+    def mark_distilled(self):
+        self.distilled_at = timezone.now()
+
+
+class ContentTemplate(models.Model):
+    """A named recipe (e.g. 'Instagram carousel') — an ordered set of prompts
+    that produce values for a ContentItem's fields in one run.
+    Adapted from ai-marketing's content_templates.Template.
+    """
+
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    content_type = models.CharField(
+        max_length=20, choices=ContentItem.CONTENT_TYPE_CHOICES, blank=True,
+        help_text="Sets the generated item's content type",
+    )
+    default_platforms = models.ManyToManyField(
+        Platform, blank=True, related_name="content_templates",
+        help_text="Platforms pre-set on items generated from this template",
+    )
+    keywords = models.TextField(blank=True, help_text="Comma-separated keywords to steer generation")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
+class ContentTemplatePrompt(models.Model):
+    """One ordered step of a ContentTemplate, producing one ContentItem field.
+    Adapted from ai-marketing's content_templates.TemplatePrompt.
+    """
+
+    # Must match attribute names on ContentItem so results map straight across.
+    TARGET_FIELD_CHOICES = [
+        ("topic", "Topic"),
+        ("hook", "Hook"),
+        ("caption", "Caption"),
+        ("call_to_action", "Call to action"),
+        ("hashtags", "Hashtags"),
+    ]
+
+    template = models.ForeignKey(ContentTemplate, on_delete=models.CASCADE, related_name="prompts")
+    name = models.CharField(max_length=255)
+    target_field = models.CharField(max_length=20, choices=TARGET_FIELD_CHOICES, default="caption")
+    prompt = models.TextField(help_text="Instruction for this step, e.g. 'Write a scroll-stopping hook.'")
+    order = models.IntegerField(default=0)
+
+    class Meta:
+        ordering = ["order"]
+
+    def __str__(self):
+        return f"{self.template.name} · {self.name}"

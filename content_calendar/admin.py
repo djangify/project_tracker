@@ -1,7 +1,13 @@
 # content_calendar/admin.py
 from django.contrib import admin
 
-from .models import ContentItem, Platform
+from .models import (
+    ContentItem,
+    ContentTemplate,
+    ContentTemplatePrompt,
+    Platform,
+    VoiceProfile,
+)
 
 
 @admin.register(Platform)
@@ -33,3 +39,23 @@ class ContentItemAdmin(admin.ModelAdmin):
             "fields": ("status", "approval_status", "order"),
         }),
     )
+
+
+class ContentTemplatePromptInline(admin.TabularInline):
+    model = ContentTemplatePrompt
+    extra = 1
+    fields = ("order", "name", "target_field", "prompt")
+    ordering = ("order",)
+
+
+@admin.register(ContentTemplate)
+class ContentTemplateAdmin(admin.ModelAdmin):
+    list_display = ("name", "content_type", "updated_at")
+    search_fields = ("name", "description", "keywords")
+    filter_horizontal = ("default_platforms",)
+    inlines = [ContentTemplatePromptInline]
+
+
+@admin.register(VoiceProfile)
+class VoiceProfileAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "enabled", "sentence_length", "distilled_at")

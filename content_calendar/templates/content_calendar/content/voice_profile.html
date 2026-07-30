@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Voice profile - {{ site_config.site_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+    <div class="mb-6">
+        <a href="{% url 'content_calendar:generate' %}" class="text-indigo-600 hover:text-indigo-800 text-sm">← Back to generate</a>
+    </div>
+
+    <h1 class="text-3xl font-bold text-gray-900 mb-2">Voice profile</h1>
+    <p class="text-gray-500 mb-6">Paste some of your own writing and we'll distil it into a reusable voice, so generated content sounds like you.</p>
+
+    {% if distilled %}
+    <div class="mb-6 rounded-md bg-green-50 border border-green-200 text-green-800 px-4 py-3 text-sm">Voice profile updated.</div>
+    {% endif %}
+
+    {% if voice.is_distilled %}
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div class="flex items-center justify-between mb-3">
+            <h2 class="text-lg font-semibold text-gray-900">Current voice</h2>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle">
+                <button type="submit" class="text-sm {% if voice.enabled %}text-green-700{% else %}text-gray-400{% endif %} hover:underline">
+                    {% if voice.enabled %}● Enabled (click to disable){% else %}○ Disabled (click to enable){% endif %}
+                </button>
+            </form>
+        </div>
+        {% if voice.summary %}<p class="text-sm text-gray-700 mb-2">{{ voice.summary }}</p>{% endif %}
+        {% if voice.tone_words %}<p class="text-sm text-gray-600"><span class="font-medium">Tone:</span> {{ voice.tone_words|join:", " }}</p>{% endif %}
+        <p class="text-sm text-gray-600"><span class="font-medium">Sentence length:</span> {{ voice.get_sentence_length_display }}</p>
+        {% if voice.words_to_avoid %}<p class="text-sm text-gray-600"><span class="font-medium">Avoids:</span> {{ voice.words_to_avoid|join:", " }}</p>{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">{% if voice.is_distilled %}Re-distil from new samples{% else %}Distil your voice{% endif %}</h2>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="rounded-md bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">{{ form.non_field_errors }}</div>
+            {% endif %}
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}<p class="text-xs text-gray-400 mt-1">{{ field.help_text }}</p>{% endif %}
+                {% if field.errors %}<p class="text-red-500 text-xs mt-1">{{ field.errors|join:", " }}</p>{% endif %}
+            </div>
+            {% endfor %}
+            <div class="flex justify-end">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Distil voice</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

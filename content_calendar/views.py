@@ -12,10 +12,15 @@ from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, TemplateView, UpdateView, View
 from rest_framework import viewsets
 
+from django.shortcuts import redirect, render
+
+from ai_settings import ai_client
+
 from projects.models import Project
 
-from .forms import ContentItemForm
-from .models import ContentItem, Platform
+from . import generation
+from .forms import ContentItemForm, GenerateForm, VoiceProfileForm
+from .models import ContentItem, Platform, VoiceProfile
 from .serializers import ContentItemSerializer, PlatformSerializer
 
 
@@ -188,3 +193,76 @@ class ContentItemSetApprovalView(LoginRequiredMixin, View):
             item.save(update_fields=["approval_status", "updated_at"])
             return JsonResponse({"approval_status": item.approval_status})
         return JsonResponse({"error": "invalid status"}, status=400)
+
+
+# ---------------------------------------------------------------------------
+# Generation engine (Phase 3): Generate panel + Voice profile
+# ---------------------------------------------------------------------------
+class GenerateView(LoginRequiredMixin, View):
+    template_name = "content_calendar/content/generate.html"
+
+    def get(self, request, *args, **kwargs):
+        initial = {}
+        if request.GET.get("date"):
+            initial["scheduled_date"] = request.GET["date"]
+        pid = request.GET.get("project")
+        if pid and pid.isdigit():
+            initial["project"] = pid
+        return render(request, self.template_name, {"form": GenerateForm(initial=initial)})
+
+    def post(self, request, *args, **kwargs):
+        form = GenerateForm(request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {"form": form})
+
+        cd = form.cleaned_data
+        try:
+            item = generation.generate_content_item(
+                template=cd.get("template"),
+                brief=cd.get("brief", "").strip(),
+                scheduled_date=cd.get("scheduled_date"),
+                project=cd.get("project"),
+                content_type=cd.get("content_type", ""),
+            )
+        except ai_client.AIConfigError as exc:
+            form.add_error(None, f"{exc} Set one up in AI Settings.")
+            return render(request, self.template_name, {"form": form})
+        except Exception as exc:  # noqa: BLE001 — surface SDK/network errors to the user
+            form.add_error(None, f"Generation failed: {type(exc).__name__}: {exc}")
+            return render(request, self.template_name, {"form": form})
+
+        return redirect(reverse("content_calendar:content_edit", args=[item.pk]) + "?generated=1")
+
+
+class VoiceProfileView(LoginRequiredMixin, View):
+    template_name = "content_calendar/content/voice_profile.html"
+
+    def get(self, request, *args, **kwargs):
+        return render(request, self.template_name, {
+            "form": VoiceProfileForm(),
+            "voice": VoiceProfile.get_solo(),
+        })
+
+    def post(self, request, *args, **kwargs):
+        # Toggle enable/disable without re-distilling.
+        if request.POST.get("action") == "toggle":
+            voice = VoiceProfile.get_solo()
+            voice.enabled = not voice.enabled
+            voice.save(update_fields=["enabled", "updated_at"])
+            return redirect(reverse("content_calendar:voice_profile"))
+
+        form = VoiceProfileForm(request.POST)
+        if not form.is_valid():
+            return render(request, self.template_name, {"form": form, "voice": VoiceProfile.get_solo()})
+
+        try:
+            voice = generation.distill_voice(form.cleaned_data["sample_text"])
+        except ai_client.AIConfigError as exc:
+            form.add_error(None, f"{exc} Set one up in AI Settings.")
+            return render(request, self.template_name, {"form": form, "voice": VoiceProfile.get_solo()})
+        except Exception as exc:  # noqa: BLE001
+            form.add_error(None, f"Distillation failed: {type(exc).__name__}: {exc}")
+            return render(request, self.template_name, {"form": form, "voice": VoiceProfile.get_solo()})
+
+        return render(request, self.template_name,
+                     {"form": VoiceProfileForm(), "voice": voice, "distilled": True})
