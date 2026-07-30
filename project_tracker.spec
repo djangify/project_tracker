@@ -16,7 +16,7 @@ ProjectTracker-mcp.exe automatically on first launch (see desktop.py /
 mcp_server/desktop_connect.py).
 """
 
-from PyInstaller.utils.hooks import collect_all, collect_submodules
+from PyInstaller.utils.hooks import collect_all, collect_data_files, collect_submodules
 
 datas = []
 binaries = []
@@ -36,12 +36,19 @@ for pkg in [
     "anthropic",
     "openai",
     "google.genai",   # new Google GenAI SDK (replaces google-generativeai)
-    "mcp",            # Model Context Protocol SDK (MCP server)
 ]:
     p_datas, p_binaries, p_hidden = collect_all(pkg)
     datas += p_datas
     binaries += p_binaries
     hiddenimports += p_hidden
+
+# MCP SDK: collect only the server/client/shared subpackages, NOT mcp.cli.
+# mcp.cli imports the optional 'typer' dependency and calls sys.exit(1) at
+# import time when it's missing, which crashes a whole-package collect_all.
+for sub in ["mcp.server", "mcp.client", "mcp.shared"]:
+    hiddenimports += collect_submodules(sub)
+hiddenimports += ["mcp", "mcp.types"]
+datas += collect_data_files("mcp")
 
 # Local Django apps + the project package. Django imports these by name at
 # runtime, so PyInstaller can't discover them by following imports alone.
